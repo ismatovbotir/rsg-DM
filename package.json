@@ -1,0 +1,14 @@
+{
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "build": "npm run build:pda && npm run build:admin && npm run build:checker",
+        "build:checker": "tailwindcss -c tailwind.config.js -i resources/css/checker.css -o public/css/checker.css --minify",
+        "build:pda": "tailwindcss -c tailwind.config.js -i resources/css/pda.css -o public/css/pda.css --minify",
+        "build:admin": "tailwindcss -c tailwind.config.js -i resources/css/admin.css -o public/css/admin.css --minify",
+        "watch": "npm run build:pda -- --watch & npm run build:admin -- --watch"
+    },
+    "devDependencies": {
+        "tailwindcss": "^3.4.17"
+    }
+}

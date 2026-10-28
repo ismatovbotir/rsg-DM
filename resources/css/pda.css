@@ -1,0 +1,91 @@
+/* PDA (handheld) interface. Built with the Tailwind CLI: `npm run build` -> public/css/pda.css (committed).
+   Same look as before; shared component classes live here, utilities are used directly in the views. */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    * { -webkit-tap-highlight-color: transparent; }
+    /* App-shell: fixed top bar (header) and bottom bar (footer); only <main> scrolls. 100dvh follows the
+       visible viewport, so the bottom bar stays above the on-screen keyboard. */
+    html, body { @apply m-0 h-full overflow-hidden; }
+    body { @apply flex flex-col bg-white font-sans text-ink; height: 100vh; height: 100dvh; }
+    p { @apply my-3; }
+    h1, h2, h3 { @apply my-3 font-semibold; }
+    h1 { @apply text-2xl; } h2 { @apply text-xl; } h3 { @apply text-lg; }
+    header { @apply flex h-[52px] shrink-0 items-center gap-1 bg-brand px-2 text-white; }
+    main { @apply min-h-0 flex-1 overflow-y-auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+    body.drawer-open main { @apply overflow-hidden; }
+    ul { @apply list-none m-0 p-0; }
+}
+
+@layer components {
+    header .title { @apply flex-1 truncate text-lg font-semibold; }
+    .hbtn { @apply relative flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent text-2xl text-white no-underline; }
+    .hbtn:active { background: rgba(255, 255, 255, .2); }
+    .dot { @apply absolute right-0.5 top-0.5 h-[18px] min-w-[18px] rounded-full bg-[#e74c3c] px-1 text-center text-[11px] leading-[18px] text-white; }
+
+    .footer { @apply flex-none shrink-0 border-t border-line bg-white px-3 py-2.5; }
+    .bar-default { @apply flex min-h-[58px] items-center justify-center; }
+    .bar-default .btn { @apply w-auto min-w-[60%]; }
+    .sticky { position: sticky; @apply top-0 z-[3] border-b border-line bg-white; }
+
+    .list { @apply m-0 list-none p-0; }
+    .row { @apply flex min-h-[58px] items-center gap-3.5 border-b border-line px-4 py-2 text-[17px] text-inherit no-underline; }
+    .row:active { @apply bg-[#e3edf9]; }
+    button.row { @apply w-full cursor-pointer border-x-0 border-t-0 bg-transparent text-left; font: inherit; }
+    .row .icon { @apply flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-brand-soft text-brand; }
+    .row .label { @apply flex-1; }
+    .row .num { @apply text-sm text-ink-faint; }
+    .row .chev { @apply text-[22px] text-[#b0b8c4]; }
+    .ico { @apply h-6 w-6 fill-none stroke-current; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .placeholder { @apply px-4 py-10 text-center text-ink-muted; }
+    .placeholder .icon { @apply mx-auto flex h-24 w-24 items-center justify-center rounded-3xl bg-brand-soft text-brand; }
+    .placeholder .ico { @apply h-[52px] w-[52px]; }
+
+    .btn { @apply block w-full cursor-pointer rounded-[10px] border-0 bg-brand p-3.5 text-center font-semibold text-white no-underline; font: inherit; font-weight: 600; }
+    .btn:active { @apply bg-brand-dark; }
+    .btn.green { @apply bg-ok; }
+    .btn.red { @apply bg-bad; }
+    .btn.gray { @apply bg-line text-ink; }
+    .field { @apply w-full rounded-[10px] border-2 border-[#c9d2de] bg-white p-3.5 text-lg; font: inherit; font-size: 18px; }
+    .field:focus { @apply border-brand outline-none; }
+    .pad { @apply p-3; }
+    .flash { @apply mx-3 mt-3 rounded-lg bg-ok-bg px-3 py-2.5 text-ok-text; }
+    .flash.error { @apply bg-bad-bg text-bad-text; }
+    .badge { @apply inline-block rounded-[10px] bg-line px-2 py-0.5 text-xs font-semibold text-[#435064]; }
+    .badge.completed, .badge.synced { @apply bg-ok-bg text-ok-text; }
+    .badge.error { @apply bg-bad-bg text-bad-text; }
+    .sub { @apply mt-0.5 block text-[13px] text-[#6b7686]; }
+    .qty { @apply w-20 rounded-lg border border-[#c9d2de] p-2 text-right text-[17px]; font: inherit; font-size: 17px; }
+    .x { @apply cursor-pointer border-0 bg-transparent p-2 text-[22px] text-bad-text; }
+    .center { @apply mx-auto max-w-[420px]; }
+    .kb { @apply whitespace-nowrap; width: auto !important; padding: 10px 14px !important; }
+    .lbl { @apply mb-3 block text-[13px] text-[#6b7686]; }
+    .lbl .field { @apply mt-1 text-ink; }
+    .lbl .kb { @apply mt-1.5; }
+    .req { @apply text-bad; }
+    .scanrow { @apply flex gap-2; }
+    .scanrow .field { @apply min-w-0 flex-1; }
+    .scanrow .btn { @apply w-auto whitespace-nowrap px-4 py-3.5; }
+
+    .line { @apply border-b border-line px-4 py-2.5; }
+    .line .lc { @apply mt-1.5 flex items-end gap-2; }
+    .line .lc form:first-child { @apply flex flex-1 gap-2; }
+    .mini { @apply flex-1 text-xs text-[#6b7686]; }
+    .mini .qty { @apply block w-full text-right; }
+    .totals { @apply flex justify-between gap-2 text-sm text-[#435064]; }
+    .kv { @apply flex justify-between gap-3 border-b border-[#eef1f5] py-2; }
+    .kv span:first-child { @apply text-[#6b7686]; }
+
+    /* side drawer */
+    #scrim { @apply fixed inset-0 z-10 hidden; background: rgba(0, 0, 0, .45); }
+    #drawer { @apply fixed bottom-0 left-0 top-0 z-[11] flex w-[78%] max-w-[300px] flex-col bg-white transition-transform duration-200; transform: translateX(-100%); }
+    #drawer.wide { @apply w-[88%] max-w-[360px]; }
+    body.drawer-open #scrim { @apply block; }
+    body.drawer-open #drawer { transform: none; }
+    #drawer .head { @apply bg-brand px-4 pb-4 pt-7 text-xl font-semibold text-white; }
+    #drawer .head small { @apply mt-1 block text-[13px] font-normal opacity-80; }
+    .dbody { @apply flex-1 overflow-y-auto p-3; }
+    .dactions { @apply grid gap-2 border-t border-line px-3 py-2.5; }
+}

@@ -1,0 +1,26 @@
+/* Price checker screen (customer-facing terminal /pricechecker and the live preview in the admin).
+   Everything scales with --u (1% of the shorter screen side), colours and scales come from the design as CSS variables. */
+/* Components only (no preflight / utilities), so the admin can load it next to admin.css without resets overriding it. */
+@tailwind components;
+
+@layer components {
+    .pcs, .pcs * { box-sizing: border-box; }
+    .pcs { @apply relative flex h-full w-full flex-col overflow-hidden text-center; background: var(--bg); color: var(--text); font-family: var(--font); font-size: var(--u); }
+    .pcs-bar { @apply flex-none; padding: calc(var(--u) * 2) calc(var(--u) * 3); font-size: calc(var(--u) * 3.2); background: var(--bar-bg); color: var(--bar-text); }
+    .pcs-main { @apply flex min-h-0 flex-1 flex-col justify-center; padding: 0 calc(var(--u) * 5); text-align: var(--align); }
+    .pcs-hint { font-size: calc(var(--u) * 6); }
+    .pcs-name { margin-bottom: calc(var(--u) * 2); font-size: calc(var(--u) * 5 * var(--name-scale)); color: var(--name); line-height: 1.15; overflow-wrap: anywhere; }
+    .pcs-price { @apply font-extrabold; font-size: calc(var(--u) * 18 * var(--price-scale)); color: var(--price); line-height: 1; white-space: nowrap; }
+    .pcs-price small { @apply font-normal; font-size: .25em; color: var(--text); }
+    .pcs-meta { margin-top: calc(var(--u) * 2); font-size: calc(var(--u) * 3); opacity: .8; }
+    .pcs-err { font-size: calc(var(--u) * 6); color: var(--err); }
+
+    /* only the block of the current state is visible: data-state = idle | result | error */
+    .pcs [data-s] { @apply hidden; }
+    .pcs[data-state=idle] [data-s=idle], .pcs[data-state=error] [data-s=error] { @apply block; }
+    .pcs[data-state=result] [data-s=result] { @apply block; }
+
+    /* split layout: name on the left, price on the right */
+    .pcs[data-layout=split][data-state=result] [data-s=result] { @apply grid items-center; grid-template-columns: 1fr auto; gap: calc(var(--u) * 4); }
+    .pcs[data-layout=split] .pcs-name { margin-bottom: 0; text-align: left; }
+}

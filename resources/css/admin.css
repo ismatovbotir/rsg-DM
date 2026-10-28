@@ -1,0 +1,103 @@
+/* Admin (desktop) interface. Built with the Tailwind CLI: `npm run build` -> public/css/admin.css (committed). */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+[x-cloak] { display: none !important; }
+
+@layer base {
+    /* App-shell: fixed sidebar, fixed top and bottom bars; only .scroll moves. */
+    html, body { @apply h-full overflow-hidden; }
+    body { @apply m-0 flex bg-[#f3f5f8] text-[15px] leading-[1.45] text-ink; height: 100vh; height: 100dvh; font-family: system-ui, sans-serif; }
+    h1 { @apply my-3 text-[22px] font-bold; }
+    h2, h3 { @apply my-3 font-semibold; }
+    p { @apply my-3; }
+    code { @apply rounded bg-[#eef1f5] px-1 py-0.5 text-[13px]; }
+    table { @apply w-full border-collapse overflow-hidden rounded-lg bg-white; box-shadow: 0 1px 2px rgba(0, 0, 0, .08); }
+    th, td { @apply border-b border-[#e8ecf1] px-3.5 py-2.5 text-left; }
+    th { @apply bg-[#f7f9fb] text-[13px] font-normal text-ink-muted; }
+    td.num, th.num { @apply text-right; }
+    input, select, textarea { @apply rounded-md border border-[#c9d2de] bg-white px-2.5 py-2; }
+    input[type=checkbox], input[type=radio] { @apply p-0; }
+}
+
+@layer components {
+    aside { @apply flex w-[230px] shrink-0 flex-col overflow-y-auto bg-brand-navy py-5 text-white; }
+    aside .brand { @apply px-5 pb-5 text-lg font-bold; }
+    aside a, aside button { @apply block w-full cursor-pointer border-0 bg-transparent px-5 py-[11px] text-left text-[#cfdbec] no-underline; }
+    aside a:hover, aside button:hover, aside a.active { @apply text-white; background: rgba(255, 255, 255, .12); }
+    aside .spacer { @apply flex-1; }
+    aside details.grp > summary { @apply flex cursor-pointer select-none list-none items-center justify-between px-5 pb-1.5 pt-3.5 text-[11px] uppercase text-[#8fa5c4]; letter-spacing: .08em; }
+    aside details.grp > summary::-webkit-details-marker { display: none; }
+    aside details.grp > summary::after { content: '▸'; @apply text-xs transition-transform duration-150; }
+    aside details.grp[open] > summary::after { transform: rotate(90deg); }
+    aside details.grp > summary:hover { @apply text-white; }
+    aside details.grp > a { @apply pl-7; }
+
+    .main { @apply flex min-w-0 flex-1 flex-col; }
+    .topbar { @apply flex flex-none items-center gap-4 border-b border-line bg-white px-8 py-3; }
+    .topbar h1 { @apply m-0 flex-1; }
+    .scroll { @apply min-h-0 flex-1 overflow-y-auto px-8 py-6; }
+    .botbar { @apply flex flex-none justify-between border-t border-line bg-white px-8 py-2 text-[13px] text-ink-muted; }
+
+    .bar { @apply mb-4 flex flex-wrap items-center gap-2.5; }
+    .bar .grow { @apply flex-1; }
+    .btn { @apply inline-block cursor-pointer rounded-md border-0 bg-brand px-3.5 py-2 text-white no-underline; }
+    .btn:hover { @apply bg-brand-dark; }
+    .btn.gray { @apply bg-line text-ink; }
+    .btn.gray:hover { @apply bg-[#d6dce6]; }
+    .btn.red { @apply bg-bad; }
+    .btn[disabled] { @apply cursor-not-allowed opacity-50; }
+    .badge { @apply inline-block rounded-[10px] bg-line px-[9px] py-0.5 text-xs font-semibold text-[#435064]; }
+    .badge.completed, .badge.synced { @apply bg-ok-bg text-ok-text; }
+    .badge.error { @apply bg-bad-bg text-bad-text; }
+    .flash { @apply mb-4 rounded-md bg-ok-bg px-3.5 py-2.5 text-ok-text; }
+    .flash.error { @apply bg-bad-bg text-bad-text; }
+    .pager { @apply mt-3.5 flex gap-2.5; }
+    form.inline { display: inline; }
+    .actions { @apply flex flex-wrap gap-2.5; }
+    .hint { @apply text-xs text-ink-muted; }
+    .sub { @apply block text-[13px] text-ink-muted; }
+
+    /* form card: a fluid grid of fields */
+    .card { @apply grid w-full content-start rounded-lg bg-white p-5; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0 24px; box-shadow: 0 1px 2px rgba(0, 0, 0, .08); }
+    .card > fieldset, .card > p, .card > .full, .card > .actions, .card > .tabs, .card > .tabpanel, .card > .flash { grid-column: 1 / -1; }
+    .card label { @apply mb-3.5 block text-[13px] text-ink-muted; }
+    .card input, .card select, .card textarea { @apply mt-1 block w-full text-ink; }
+    .card input[type=checkbox], .card input[type=radio] { @apply mr-2 inline-block w-auto; margin-top: 0; }
+    .card label.chk { @apply mb-2 block text-[15px] text-ink; }
+    .card fieldset { @apply mb-3.5 rounded-md border border-line px-3 py-2.5; }
+    .card legend { @apply text-[13px] text-ink-muted; }
+    .card table { @apply mb-3.5 border border-[#e8ecf1]; box-shadow: none; }
+    .card table input { @apply m-0 w-full; }
+
+    /* tabs: .tabs buttons[data-tab] + .tabpanel#id (script in layouts/admin) */
+    .tabs { @apply mb-[18px] flex gap-1 overflow-x-auto overflow-y-hidden border-b-2 border-line; }
+    .tabs button { @apply -mb-0.5 cursor-pointer whitespace-nowrap border-0 border-b-2 border-transparent bg-transparent px-[18px] py-2.5 text-ink-muted; }
+    .tabs button:hover { @apply text-ink; }
+    .tabs button.on { @apply border-brand font-semibold text-brand; }
+    .tabpanel { @apply hidden; }
+    .tabpanel.on { @apply grid content-start; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0 24px; }
+    .tabpanel > .full, .tabpanel > table, .tabpanel > fieldset, .tabpanel > p { grid-column: 1 / -1; }
+
+    /* label / checker designers */
+    .panel { @apply mb-3.5 rounded-lg bg-white px-4 py-3.5; box-shadow: 0 1px 2px rgba(0, 0, 0, .08); }
+    .panel h3 { @apply mb-2.5 mt-0 text-sm font-normal text-ink-muted; }
+    .panel label { @apply mb-2 block text-xs text-ink-muted; }
+    .panel input, .panel select { @apply mt-[3px] block w-full; }
+    .panel input[type=checkbox] { @apply mr-1.5 inline-block w-auto; margin-top: 0; }
+    /* label designer canvas (the editor itself is client-side JS) */
+    #sheet { @apply absolute left-0 top-0 bg-white outline-none; transform-origin: 0 0; box-shadow: 0 2px 8px rgba(0, 0, 0, .25);
+             background-image: linear-gradient(#eef1f6 1px, transparent 1px), linear-gradient(90deg, #eef1f6 1px, transparent 1px); }
+    .el { @apply absolute cursor-move select-none text-black; outline: 1px dashed transparent; touch-action: none; }
+    .el:hover { outline-color: #7da2d4; }
+    .el.sel { outline: 2px solid #2a5d9f; }
+    .el .grip { @apply absolute hidden h-3 w-3 cursor-nwse-resize rounded-sm bg-brand; right: -6px; bottom: -6px; }
+    .el.sel .grip { @apply block; }
+    .el .txt { @apply h-full w-full overflow-hidden; line-height: 1.15; word-break: break-word; }
+    .el svg { @apply block h-full w-full; }
+    .preview #sheet .el { pointer-events: none; }
+    .row4 { @apply grid grid-cols-4; gap: 0 8px; }
+    .seg { @apply flex gap-1; }
+    .seg button, .seg select { @apply flex-1; }
+}
