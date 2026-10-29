@@ -1,4 +1,4 @@
-{{-- Header inputs for a document type, bound to the Livewire $header array. Params: $fields, $warehouses, $priceTypes, $cpResults. --}}
+{{-- Header inputs for a document type, bound to the Livewire $header array. Params: $fields, $warehouses, $priceTypes, $cpResults, $lockedWarehouse (shop of the user: fixed source warehouse). --}}
 @foreach ($fields as $name => $f)
     @if ($f['type'] === 'counterparty')
         <div class="lbl" wire:key="f-{{ $name }}">
@@ -25,10 +25,14 @@
     @elseif ($f['type'] === 'warehouse')
         <label class="lbl" wire:key="f-{{ $name }}">
             {{ $f['label'] }}@if ($f['required'])<span class="req"> *</span>@endif
-            <select class="field" wire:model="header.{{ $name }}">
-                <option value="">— tanlang —</option>
-                @foreach ($warehouses as $w)<option value="{{ $w->id }}">{{ $w->name }}</option>@endforeach
-            </select>
+            @if ($name === 'warehouse_id' && ($lockedWarehouse ?? null))
+                <input class="field" value="{{ $warehouses->firstWhere('id', $lockedWarehouse)?->name }}" disabled>
+            @else
+                <select class="field" wire:model="header.{{ $name }}">
+                    <option value="">— tanlang —</option>
+                    @foreach (($name === 'warehouse_id' ? ($sourceWarehouses ?? $warehouses) : $warehouses) as $w)<option value="{{ $w->id }}">{{ $w->name }}</option>@endforeach
+                </select>
+            @endif
         </label>
     @elseif ($f['type'] === 'pricetype')
         <label class="lbl" wire:key="f-{{ $name }}">

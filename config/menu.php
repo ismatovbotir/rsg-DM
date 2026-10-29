@@ -1,7 +1,7 @@
 <?php
 
 /*
-| PDA main menu (Uzbek, Latin script), modelled on Cleverence Retail 15.
+| PDA main menu (Uzbek, Latin script), modelled on Cleverence Retail 15. The product name is "RSG Agent".
 | Order and hardware keys agreed with the UX designer, the warehouse expert and the project manager:
 | assigned tasks first, then operations by real daily frequency, reference tools last.
 |
@@ -12,9 +12,10 @@
 |            so warehouse muscle memory survives rows appearing and disappearing.
 */
 return [
-    'app_name' => 'Retail 15',
+    'app_name' => 'RSG Agent',
 
     'items' => [
+        ['key' => 'directories', 'title' => 'Mahsulotlar',             'icon' => 'directories', 'route' => 'directory'],
         ['key' => 'tasks',       'title' => 'Vazifalarim',             'icon' => 'tasks',       'route' => 'tasks.index', 'hotkey' => 0],
         ['key' => 'receiving',   'title' => 'Qabul qilish',            'icon' => 'receiving',   'doc' => true, 'hotkey' => 1],
         ['key' => 'pricecheck',  'title' => 'Narxni tekshirish',       'icon' => 'pricecheck',  'doc' => true, 'hotkey' => 2],
@@ -25,11 +26,11 @@ return [
         ['key' => 'prices',      'title' => 'Narxlarni o‘zgartirish',  'icon' => 'prices',      'doc' => true, 'hotkey' => 7],
         ['key' => 'pickship',    'title' => 'Terish va jo‘natish',     'icon' => 'pickship',    'doc' => true, 'hotkey' => 8],
         ['key' => 'barcodes',    'title' => 'Shtrix-kodlarni yig‘ish', 'icon' => 'barcodes',    'hotkey' => 9],
-        ['key' => 'directories', 'title' => 'Ma’lumotnomalar',         'icon' => 'directories', 'route' => 'directory'],
     ],
 
     // Side (burger) menu: system-level actions. 'logout' => true renders a sign-out button.
     'side' => [
+        ['key' => 'printer',  'title' => 'Printer',                      'icon' => 'printer',  'route' => 'printer'],
         ['key' => 'settings', 'title' => 'Sozlamalar',                   'icon' => 'settings', 'route' => 'settings'],
         ['key' => 'user',     'title' => 'Foydalanuvchini almashtirish', 'icon' => 'user', 'logout' => true],
         ['key' => 'exit',     'title' => 'Chiqish',                      'icon' => 'exit', 'logout' => true],

@@ -35,7 +35,7 @@ class Index extends AdminPage
     public function render()
     {
         return $this->page('livewire.admin.printers.index', [
-            'printers' => Printer::orderBy('name')->get(),
+            'printers' => Printer::shared()->orderBy('name')->get(),
             'deviceCounts' => Device::whereNotNull('printer_id')->selectRaw('printer_id, count(*) as n')->groupBy('printer_id')->pluck('n', 'printer_id'),
         ]);
     }

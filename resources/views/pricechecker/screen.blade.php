@@ -16,12 +16,40 @@
             var scan = document.getElementById('scan'), stage = document.getElementById('pcs'), timer,
                 version = @json($version), timeout = {{ (int) $d['timeout'] }} * 1000;
 
+            // the colour set of the item's group: set over the theme while the result shows, removed afterwards
+            var applied = [];
+            function scheme(vars) {
+                applied.forEach(function (n) { stage.style.removeProperty(n); });
+                applied = [];
+                (vars || '').split(';').forEach(function (pair) {
+                    var i = pair.indexOf(':');
+                    if (i > 0) { var n = pair.slice(0, i).trim(); stage.style.setProperty(n, pair.slice(i + 1).trim()); applied.push(n); }
+                });
+            }
+
             function show(state) {
+                if (state !== 'result') scheme('');
                 stage.dataset.state = state;
                 clearTimeout(timer);
                 if (state !== 'idle') timer = setTimeout(function () { show('idle'); }, timeout);
             }
-            function set(field, text) { var el = stage.querySelector('[data-f=' + field + ']'); if (el) el.textContent = text; }
+            // fill every [data-f] with the payload field; optional blocks (.pcs-opt) vanish when their value is empty
+            function fill(d) {
+                stage.querySelectorAll('[data-f]').forEach(function (el) {
+                    var f = el.dataset.f, v = f === 'stock_text' ? (d.stock && d.stock.text) : d[f];
+                    v = v == null ? '' : String(v);
+                    if (f === 'image') { el.src = v; el.hidden = !v; var box = stage.querySelector('[data-f-box=image]'); if (box) box.hidden = !v; return; }
+                    el.textContent = v;
+                });
+                stage.querySelectorAll('.pcs-opt').forEach(function (el) {
+                    var f = el.querySelector('[data-f]');
+                    el.hidden = !(f && f.textContent.trim());
+                });
+                stage.dataset.stock = (d.stock && d.stock.state) || '';
+            }
+
+            var clock = stage.querySelector('[data-clock]');
+            if (clock) setInterval(function () { var t = new Date(); clock.textContent = ('0' + t.getHours()).slice(-2) + ':' + ('0' + t.getMinutes()).slice(-2); }, 10000);
 
             function look(code) {
                 fetch("{{ route('checker.price') }}?code=" + encodeURIComponent(code), { headers: { 'Accept': 'application/json' }, credentials: 'same-origin' })
@@ -33,7 +61,8 @@
                         if (!d) return;
                         if (d.v !== version) { location.reload(); return; } // the design was changed in the admin
                         if (!d.found) { show('error'); return; }
-                        set('name', d.name); set('price', d.price_text); set('unit', d.unit); set('code', d.code);
+                        fill(d);
+                        scheme(d.scheme_vars);
                         show('result');
                     })
                     .catch(function () { show('error'); });

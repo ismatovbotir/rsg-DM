@@ -28,6 +28,17 @@
             </div>
         @endif
 
+        @if ($doc->hasCheckList())
+            @php [$done, $all] = $progress; $pct = $all > 0 ? min(100, round($done / $all * 100)) : 0; @endphp
+            <div class="pad !py-1.5">
+                <div class="flex items-center justify-between text-sm">
+                    <span>{{ $doc->scope === 'group' && $doc->group ? $doc->group->name : 'Butun do‘kon' }}: <strong>{{ $done }} / {{ $all }}</strong> tekshirildi</span>
+                    @if ($doc->isDraft() && $all > $done)<a class="lnk" href="{{ route('docs.browse', $doc->id) }}?remaining=1">Qolganlar ({{ $all - $done }})</a>@endif
+                </div>
+                <div class="mt-1 h-2 overflow-hidden rounded-full bg-line"><div class="h-full rounded-full bg-brand" style="width:{{ $pct }}%"></div></div>
+            </div>
+        @endif
+
         <ul class="list">
             @forelse ($doc->lines as $line)
                 <li class="line" wire:key="line-{{ $line->id }}">

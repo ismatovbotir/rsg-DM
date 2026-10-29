@@ -10,6 +10,8 @@ class PriceTagController extends Controller
 {
     public function print()
     {
+        abort_unless(auth()->user()->canAdmin('admin.pricetags'), 403);
+
         return view('admin.pricetags.print', [
             'checks' => PriceCheck::queued()->with('item')->oldest()->get(),
         ]);

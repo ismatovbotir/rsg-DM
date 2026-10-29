@@ -44,6 +44,15 @@ return [
             'throw' => false,
         ],
 
+        // Pictures uploaded in the admin (checker logo / background, item photos): served straight from public/uploads, no storage:link needed.
+        'uploads' => [
+            'driver' => 'local',
+            'root' => public_path('uploads'),
+            'url' => '/uploads',
+            'visibility' => 'public',
+            'throw' => false,
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),

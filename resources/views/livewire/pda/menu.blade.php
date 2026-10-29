@@ -44,9 +44,9 @@
         <nav id="drawer">
             <div class="head">{{ config('menu.app_name') }}<small>{{ auth()->user()->name }}</small></div>
             <ul class="list">
-                @if (auth()->user()->isAdmin())
+                @if (auth()->user()->canAdminPanel())
                     <li>
-                        <a class="row" href="{{ route('admin.documents.index') }}">
+                        <a class="row" href="{{ route('admin.home') }}">
                             <span class="icon"><svg class="ico"><use href="#i-directories"/></svg></span>
                             <span class="label">Boshqaruv paneli</span>
                         </a>

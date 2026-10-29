@@ -6,7 +6,7 @@
     <div class="bar">
         <select wire:model.live="type">
             <option value="">Barcha turlar</option>
-            @foreach (\App\Models\Document::types() as $key => $label)<option value="{{ $key }}">{{ $label }}</option>@endforeach
+            @foreach (collect(\App\Models\Document::types())->when(auth()->user()->adminDocumentTypes() !== null, fn ($c) => $c->only(auth()->user()->adminDocumentTypes())) as $key => $label)<option value="{{ $key }}">{{ $label }}</option>@endforeach
         </select>
         <select wire:model.live="status">
             <option value="">Barcha holatlar</option>

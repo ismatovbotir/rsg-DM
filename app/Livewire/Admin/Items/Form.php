@@ -3,178 +3,115 @@
 namespace App\Livewire\Admin\Items;
 
 use App\Livewire\AdminPage;
-use App\Models\Group;
 use App\Models\Item;
-use App\Models\ItemBarcode;
-use App\Models\ItemPrice;
+use App\Models\PriceCheck;
 use App\Models\PriceType;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
+use App\Models\Printer;
+use App\Services\PriceTagPrinter;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Locked;
+use Livewire\WithFileUploads;
 
-/** Item card: main data, barcode table, prices per price list, stock balances (tabs). */
+/**
+ * Item card, view only: the data comes from Adines (1C), nothing here can be changed.
+ * The one local thing is the picture for the price checker screen, because Adines does not send pictures.
+ */
 class Form extends AdminPage
 {
+    use WithFileUploads;
+
     #[Locked]
-    public ?int $recordId = null;
+    public int $recordId;
 
-    public string $code = '';
+    public $photo = null;
 
-    public string $article = '';
+    /** Copies for "Yorliq chop etish". */
+    public int $copies = 1;
 
-    public string $barcode = '';
-
-    public string $name = '';
-
-    public string $unit = 'dona';
-
-    public string $group_id = '';
-
-    public string $price = '0';
-
-    public string $vat_rate = '0';
-
-    public string $shelf_life_days = '';
-
-    public bool $is_weighed = false;
-
-    public bool $is_active = true;
-
-    /** @var list<array{barcode: string, qty_in_pack: string|float, is_active: bool}> */
-    public array $barcodes = [];
-
-    /** @var array<int, string> price_type_id => price (empty = base price) */
-    public array $prices = [];
-
-    public function mount(?int $record = null): void
+    public function mount(int $record): void
     {
-        $item = $record ? Item::with('barcodes', 'prices')->findOrFail($record) : null;
-        $this->recordId = $item?->id;
+        $this->recordId = Item::findOrFail($record)->id;
+    }
 
-        if ($item) {
-            $this->fill([
-                'code' => $item->code, 'article' => (string) $item->article, 'barcode' => (string) $item->barcode, 'name' => $item->name,
-                'unit' => $item->unit, 'group_id' => (string) $item->group_id, 'price' => (string) ($item->price + 0), 'vat_rate' => (string) ($item->vat_rate + 0),
-                'shelf_life_days' => (string) $item->shelf_life_days, 'is_weighed' => $item->is_weighed, 'is_active' => $item->is_active,
-            ]);
-            $this->barcodes = $item->barcodes->map(fn ($b) => ['barcode' => $b->barcode, 'qty_in_pack' => (string) ($b->qty_in_pack + 0), 'is_active' => $b->is_active])->all();
+    public function updatedPhoto(): void
+    {
+        $this->validate(['photo' => 'image|mimes:jpg,jpeg,png,webp|max:4096'], [], ['photo' => 'Rasm']);
+        Item::findOrFail($this->recordId)->update(['image' => $this->photo->storeAs('items', Str::random(24).'.'.$this->photo->extension(), 'uploads')]);
+        $this->photo = null;
+        $this->ok('Rasm saqlandi.');
+    }
+
+    public function removePhoto(): void
+    {
+        Item::findOrFail($this->recordId)->update(['image' => null]);
+        $this->ok('Rasm olib tashlandi.');
+    }
+
+    /** Print this item's price tag now on the price-tag printer (LAN: the server sends it). */
+    public function printTag(PriceTagPrinter $printing): void
+    {
+        $this->validate(['copies' => 'required|integer|min:1|max:100'], [], ['copies' => 'Nusxa soni']);
+        $printer = Printer::priceTag();
+
+        if (! $printer) {
+            $this->fail('Narx yorliqlari printeri tanlanmagan (Printerlar bo‘limi).');
+
+            return;
         }
 
-        foreach (PriceType::active()->orderBy('name')->get() as $type) {
-            $this->prices[$type->id] = $item ? (string) ($item->prices->firstWhere('price_type_id', $type->id)?->price ?? '') : '';
+        if ($printer->isBluetooth()) {
+            $this->fail('Narx yorliqlari printeri Bluetooth: uni serverdan emas, PDA dan chop eting yoki navbatga qo‘shing.');
+
+            return;
         }
-    }
 
-    public function addBarcode(): void
-    {
-        $this->barcodes[] = ['barcode' => '', 'qty_in_pack' => '1', 'is_active' => true];
-    }
-
-    public function removeBarcode(int $index): void
-    {
-        unset($this->barcodes[$index]);
-        $this->barcodes = array_values($this->barcodes);
-    }
-
-    public function save()
-    {
-        $data = $this->validate([
-            'code' => ['required', 'string', 'max:50', Rule::unique('items', 'code')->ignore($this->recordId)],
-            'article' => 'nullable|string|max:50',
-            'barcode' => ['nullable', 'string', 'max:50', Rule::unique('items', 'barcode')->ignore($this->recordId)],
-            'name' => 'required|string|max:255',
-            'unit' => 'required|string|max:20',
-            'price' => 'required|numeric|min:0',
-            'vat_rate' => 'nullable|numeric|min:0|max:100',
-            'shelf_life_days' => 'nullable|integer|min:0|max:36500',
-            'group_id' => 'nullable|exists:groups,id',
-            'is_weighed' => 'boolean',
-            'is_active' => 'boolean',
-        ], [], ['code' => 'Kod', 'name' => 'Nomi', 'unit' => 'Birlik', 'price' => 'Narx', 'barcode' => 'Shtrix-kod']);
-
-        $data = collect($data)->map(fn ($v) => $v === '' ? null : $v)->all();
-        $data['vat_rate'] ??= 0;
+        $item = Item::findOrFail($this->recordId);
 
         try {
-            DB::transaction(function () use ($data) {
-                $item = $this->recordId ? tap(Item::findOrFail($this->recordId))->update($data) : Item::create($data);
-                $this->syncBarcodes($item);
-                $this->syncPrices($item);
-            });
-        } catch (ValidationException $e) {
-            throw $e; // shown next to the form; nothing was saved
+            $printing->send($printer, implode("
+", array_fill(0, $this->copies, $printing->label($printer, $item))));
+        } catch (\Throwable $e) {
+            $this->fail($e->getMessage());
+
+            return;
         }
 
-        session()->flash('status', $this->recordId ? 'Tovar saqlandi.' : 'Tovar qo‘shildi.');
-
-        return $this->redirect(route('admin.items.index'));
+        $this->ok("{$this->copies} ta yorliq {$printer->name} printeriga yuborildi.");
     }
 
-    /** Prices per price list; an empty value removes the row (falls back to the base price). */
-    private function syncPrices(Item $item): void
+    /** Add the tag to the print queue ("Narx yorliqlari"), to be printed together with the rest. */
+    public function queueTag(): void
     {
-        foreach (PriceType::pluck('id') as $typeId) {
-            $value = $this->prices[$typeId] ?? null;
+        $item = Item::findOrFail($this->recordId);
 
-            if ($value === null || $value === '') {
-                ItemPrice::where(['item_id' => $item->id, 'price_type_id' => $typeId])->delete();
-            } elseif (is_numeric($value) && $value >= 0) {
-                ItemPrice::updateOrCreate(['item_id' => $item->id, 'price_type_id' => $typeId], ['price' => $value]);
-            } else {
-                throw ValidationException::withMessages(['prices' => 'Narx noto‘g‘ri kiritilgan.']);
-            }
+        if (PriceCheck::queued()->where('item_id', $item->id)->exists()) {
+            $this->fail('Bu tovar yorlig‘i allaqachon navbatda.');
+
+            return;
         }
+
+        PriceCheck::create(['item_id' => $item->id, 'user_id' => auth()->id(), 'price' => $item->price, 'action' => PriceCheck::PRINT]);
+        $this->ok('Yorliq chop etish navbatiga qo‘shildi.');
     }
 
-    /**
-     * The barcode table: rows of barcode / qty_in_pack (a case of 12 books 12) / active.
-     * Blank rows are ignored; a barcode already used by another item or twice in the table is rejected.
-     */
-    private function syncBarcodes(Item $item): void
+    /** A user tied to a shop sees that shop's price list only. */
+    private function visiblePriceTypes()
     {
-        $rows = [];
-
-        foreach ($this->barcodes as $row) {
-            $code = trim((string) ($row['barcode'] ?? ''));
-
-            if ($code === '') {
-                continue;
-            }
-
-            $qty = trim((string) ($row['qty_in_pack'] ?? '')) === '' ? 1 : $row['qty_in_pack'];
-
-            if (! is_numeric($qty) || $qty <= 0) {
-                throw ValidationException::withMessages(['barcodes' => "Noto‘g‘ri miqdor: {$code}"]);
-            }
-
-            $taken = ItemBarcode::where('barcode', $code)->where('item_id', '!=', $item->id)->exists()
-                || Item::where('barcode', $code)->where('id', '!=', $item->id)->exists();
-
-            if ($taken || $code === $item->barcode || isset($rows[$code])) {
-                throw ValidationException::withMessages(['barcodes' => "Shtrix-kod band yoki takrorlangan: {$code}"]);
-            }
-
-            $rows[$code] = ['qty_in_pack' => (float) $qty, 'is_active' => ! empty($row['is_active'])];
-        }
-
-        $item->barcodes()->delete();
-        foreach ($rows as $code => $values) {
-            $item->barcodes()->create(['barcode' => $code] + $values);
-        }
+        return PriceType::active()->when(auth()->user()?->accessiblePriceTypeIds(), fn ($q, $ids) => $q->whereIn('id', $ids))->orderBy('name')->get();
     }
 
     public function render()
     {
-        $item = $this->recordId ? Item::find($this->recordId) : null;
+        $item = Item::with(['group.parent.parent', 'barcodes', 'prices'])->findOrFail($this->recordId);
 
         return $this->page('livewire.admin.items.form', [
-            'groups' => Group::with('parent.parent.parent')->orderBy('name')->get()->sortBy('path'),
-            'priceTypes' => PriceType::active()->orderBy('name')->get(),
-            'stocks' => $item
-                ? $item->stocks()->join('warehouses', 'warehouses.id', '=', 'item_stocks.warehouse_id')->orderBy('warehouses.name')->get(['warehouses.name', 'item_stocks.qty', 'item_stocks.cost', 'item_stocks.stock_date'])
-                : collect(),
             'item' => $item,
+            'queued' => PriceCheck::queued()->where('item_id', $item->id)->exists(),
+            'printer' => Printer::priceTag(),
+            'priceTypes' => $this->visiblePriceTypes(),
+            'stocks' => $item->stocks()->join('warehouses', 'warehouses.id', '=', 'item_stocks.warehouse_id')
+                ->when(auth()->user()->accessibleWarehouseIds(), fn ($q, $ids) => $q->whereIn('item_stocks.warehouse_id', $ids))
+                ->orderBy('warehouses.name')->get(['warehouses.name', 'item_stocks.qty', 'item_stocks.cost', 'item_stocks.stock_date']),
         ]);
     }
 }

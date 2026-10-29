@@ -26,12 +26,22 @@ trait HasDocumentHeader
         $warehouses = Warehouse::active()->get();
         $priceTypes = PriceType::active()->get();
 
+        $shop = auth()->user()->shopId();
+
         foreach (Document::headerFieldsFor($type) as $name => $field) {
             $value = $values[$name] ?? null;
+
+            // a user tied to a shop works from it: the (source) warehouse defaults to that shop and stays inside the accessible ones
+            if ($name === 'warehouse_id' && $shop && ! in_array((int) $value, auth()->user()->accessibleWarehouseIds() ?? [], true)) {
+                $value = $shop;
+            }
 
             // a single warehouse / price list is preselected
             if (blank($value) && $field['type'] === 'warehouse' && $warehouses->count() === 1) {
                 $value = $warehouses->first()->id;
+            }
+            if (blank($value) && $field['type'] === 'pricetype' && ($shopType = auth()->user()->shopPriceTypeId())) {
+                $value = $shopType; // the price list of the user's shop
             }
             if (blank($value) && $field['type'] === 'pricetype' && $priceTypes->count() === 1) {
                 $value = $priceTypes->first()->id;
@@ -92,6 +102,17 @@ trait HasDocumentHeader
             }
         }
 
+        // the source warehouse of a shop user is always their shop, whatever the browser sent; the destination is free
+        $allowed = auth()->user()->accessibleWarehouseIds();
+        if ($allowed && array_key_exists('warehouse_id', Document::headerFieldsFor($type)) && ! in_array((int) ($data['warehouse_id'] ?? 0), $allowed, true)) {
+            $data['warehouse_id'] = (string) (auth()->user()->shopId() ?? $allowed[0]); // string like the form values, so "different" compares properly
+        }
+
+        $allowedTypes = auth()->user()->accessiblePriceTypeIds();
+        if ($allowedTypes && filled($data['price_type_id'] ?? null) && ! in_array((int) $data['price_type_id'], $allowedTypes, true)) {
+            $data['price_type_id'] = (string) (auth()->user()->shopPriceTypeId() ?? $allowedTypes[0]);
+        }
+
         $data = array_map(fn ($v) => $v === '' ? null : $v, $data);
 
         return Validator::make($data, Document::headerRules($type, $editing), Document::validationMessages(), Document::headerLabels($type))->validate();
@@ -99,9 +120,14 @@ trait HasDocumentHeader
 
     protected function headerViewData(): array
     {
+        $user = auth()->user();
+        $ids = $user->accessibleWarehouseIds();
+
         return [
-            'warehouses' => Warehouse::active()->orderBy('name')->get(),
-            'priceTypes' => PriceType::active()->orderBy('name')->get(),
+            'warehouses' => Warehouse::active()->orderBy('name')->get(), // destination: free pick
+            'sourceWarehouses' => Warehouse::active()->when($ids, fn ($q) => $q->whereIn('id', $ids))->orderBy('name')->get(),
+            'lockedWarehouse' => $ids && count($ids) === 1 ? $ids[0] : null, // one accessible warehouse = fixed source
+            'priceTypes' => PriceType::active()->when($user->accessiblePriceTypeIds(), fn ($q, $t) => $q->whereIn('id', $t))->orderBy('name')->get(),
             'cpResults' => $this->counterpartyResults(),
         ];
     }

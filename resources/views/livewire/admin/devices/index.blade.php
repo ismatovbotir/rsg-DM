@@ -10,15 +10,14 @@
         <tbody>
             @forelse ($devices as $device)
                 <tr wire:key="device-{{ $device->id }}">
-                    <td>{{ $device->name ?: '— nomsiz —' }} <small>{{ substr($device->uuid, 0, 8) }}</small></td>
+                    <td><a class="lnk" href="{{ route('admin.devices.edit', $device) }}">{{ $device->name ?: '— nomsiz —' }}</a> <small>{{ substr($device->uuid, 0, 8) }}</small></td>
                     <td>{{ \App\Models\Device::MODES[$device->keyboard_mode] ?? $device->keyboard_mode }}</td>
                     <td>{{ $device->printer?->name }}</td>
                     <td>{{ $device->lastUser?->name }}</td>
                     <td>{{ $device->last_seen_at?->format('d.m.Y H:i') }}</td>
                     <td><small>{{ \Illuminate\Support\Str::limit($device->user_agent, 50) }}</small></td>
                     <td class="text-right">
-                        <a class="btn gray" href="{{ route('admin.devices.edit', $device) }}">Tahrirlash</a>
-                        <button class="btn red" wire:click="delete({{ $device->id }})" wire:confirm="Qurilma o‘chirilsinmi?">O‘chirish</button>
+                        <button class="btn sm red" wire:click="delete({{ $device->id }})" wire:confirm="Qurilma o‘chirilsinmi?">O‘chirish</button>
                     </td>
                 </tr>
             @empty

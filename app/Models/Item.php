@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Item extends Model
 {
-    protected $fillable = ['id', 'uuid', 'unit_main_id', 'unit_order_id', 'unit_report_id', 'code', 'article', 'barcode', 'name', 'unit', 'price', 'onec_ref', 'is_weighed', 'vat_rate', 'shelf_life_days', 'group_id', 'is_active'];
+    protected $fillable = ['id', 'uuid', 'unit_main_id', 'unit_order_id', 'unit_report_id', 'code', 'article', 'barcode', 'name', 'unit', 'price', 'onec_ref', 'is_weighed', 'vat_rate', 'shelf_life_days', 'group_id', 'is_active', 'image'];
 
     protected $casts = ['price' => 'decimal:2', 'vat_rate' => 'decimal:2', 'shelf_life_days' => 'integer', 'is_weighed' => 'boolean', 'is_active' => 'boolean'];
 
@@ -41,6 +41,18 @@ class Item extends Model
         $row = $priceTypeId ? $this->prices()->where('price_type_id', $priceTypeId)->first() : null;
 
         return $row ? $row->price : $this->price;
+    }
+
+    /** Sets ->shop_price on each item: its price in the price list (base price when the list has none). One query for the batch. */
+    public static function withShopPrices($items, ?int $priceTypeId)
+    {
+        $rows = $priceTypeId ? ItemPrice::where('price_type_id', $priceTypeId)->whereIn('item_id', $items->pluck('id'))->pluck('price', 'item_id') : collect();
+
+        foreach ($items as $item) {
+            $item->shop_price = $rows[$item->id] ?? $item->price;
+        }
+
+        return $items;
     }
 
     public function scopeActive($query)

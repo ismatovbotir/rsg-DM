@@ -65,8 +65,8 @@ class DocumentWorkflow
     {
         $printer = $this->printerFor($device);
 
-        if (! $printer) {
-            return;
+        if (! $printer || $printer->isBluetooth()) {
+            return; // a Bluetooth printer is driven from the phone: the Chop etish button hands the labels over
         }
 
         try {

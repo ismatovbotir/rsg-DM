@@ -24,6 +24,6 @@ class Index extends CrudIndex
 
     protected function routes(): array
     {
-        return ['create' => 'admin.pricetypes.create', 'edit' => 'admin.pricetypes.edit', 'newLabel' => '+ Yangi narx turi', 'empty' => 'Narx turlari yo‘q.'];
+        return ['edit' => 'admin.pricetypes.edit', 'empty' => 'Narx turlari yo‘q.'];
     }
 }

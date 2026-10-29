@@ -158,6 +158,23 @@ class Show extends PdaPage
         $document = $this->document();
         abort_unless($document->isPriceCheck() && ! $document->isDraft(), 404);
 
+        $printer = $workflow->printerFor(Device::current());
+
+        if ($printer?->isBluetooth()) {
+            [$count, $zpl] = app(\App\Services\PriceTagPrinter::class)->handOver($document, $printer);
+
+            if ($count === 0) {
+                $this->ok('Chop etiladigan yorliq yo‘q.');
+
+                return;
+            }
+
+            $this->dispatch('bt-print', zpl: $zpl, printer: $printer->name, address: (string) $printer->bt_address);
+            $this->ok("{$count} ta yorliq Bluetooth printerga yuborilmoqda ({$printer->name}).");
+
+            return;
+        }
+
         [$message, $isError] = $workflow->printDocument($document, Device::current());
         $isError ? $this->fail($message) : $this->ok($message);
     }
@@ -168,6 +185,7 @@ class Show extends PdaPage
 
         return $this->page('livewire.pda.docs.show', [
             'doc' => $document->load('lines.item', 'counterparty', 'warehouse', 'warehouseTo', 'priceType'),
+            'progress' => $document->checkProgress(),
             'fields' => $document->headerFields(),
             'editable' => Arr::except($document->headerFields(), Document::LOCKED_AFTER_CREATE),
         ] + $this->headerViewData());

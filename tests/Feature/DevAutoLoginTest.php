@@ -21,7 +21,7 @@ class DevAutoLoginTest extends TestCase
         $this->seedUsers();
         config(['dev.autologin' => true]); // env is "testing"
 
-        $this->get('/')->assertOk()->assertSee('type="password"', false)->assertDontSee('Bosh menyu');
+        $this->get('/')->assertOk()->assertSee('Badge QR kodni skanerlang')->assertDontSee('Bosh menyu');
         $this->get('/dev/login/admin')->assertNotFound();
     }
 
@@ -37,7 +37,7 @@ class DevAutoLoginTest extends TestCase
         $this->get('/admin/documents')->assertForbidden();
 
         auth()->logout();
-        $this->get('/dev/login/admin')->assertRedirect(route('admin.documents.index'));
+        $this->get('/dev/login/admin')->assertRedirect(route('admin.home'));
         $this->assertSame('admin@rsg.uz', auth()->user()->email);
     }
 

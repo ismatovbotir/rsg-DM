@@ -24,6 +24,7 @@
             <label class="row"><input type="radio" name="kb" value="off" :checked="saved === 'off'" @change="choose('off')"> <span class="label">Klaviatura o‘chiq (⌨ tugmasi bilan chaqiriladi)</span></label>
 
             <p class="sub" x-text="msg"></p>
+            <a class="btn gray" href="{{ route('printer') }}">Printer sozlamalari</a>
             <p class="sub">Qurilma: {{ $device?->name ?: 'nomsiz' }} · {{ substr((string) $device?->uuid, 0, 8) }}</p>
         </div>
     </x-pda.page>

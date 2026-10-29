@@ -74,39 +74,44 @@ class TeamFeaturesTest extends TestCase
     {
         $admin = $this->admin();
         $this->actingAs($admin);
+        $pdaRole = \App\Models\Role::where('name', 'PDA operator')->first();
 
         $this->get('/admin/users')->assertOk();
         Livewire::test(UserForm::class)
-            ->set('name', 'Ali')->set('email', 'ali@rsg.uz')->set('role', 'user')->set('password', 'secret123')->set('is_active', true)
-            ->set('menu', ['receiving', 'pricecheck'])
-            ->call('save')->assertRedirect('/admin/users');
+            ->set('name', 'Ali')->set('email', 'ali@rsg.uz')->set('role_id', (string) $pdaRole->id)->set('password', 'secret123')->set('is_active', true)
+            ->call('save')->assertRedirect();
 
+        // a new user gets a PIN and a badge at once
         $ali = User::where('email', 'ali@rsg.uz')->first();
         $this->assertTrue($ali->is_active);
-        $this->assertSame(['receiving', 'pricecheck'], $ali->menu_access);
+        $this->assertSame($pdaRole->id, $ali->role_id);
+        $this->assertSame('user', $ali->role);
+        $this->assertNotNull($ali->pin);
+        $this->assertNotNull($ali->badge_token);
 
-        // blank password keeps the old one; ticking every menu item means "no restriction"
+        // blank password keeps the old one; the role can be changed
         $hash = $ali->password;
+        $admins = \App\Models\Role::where('is_admin', true)->first();
         Livewire::test(UserForm::class, ['record' => $ali->id])
-            ->assertSet('name', 'Ali')->assertSet('menu', ['receiving', 'pricecheck'])
-            ->set('name', 'Ali V.')->set('password', '')->set('menu', array_keys(User::manageableMenu()))
+            ->assertSet('name', 'Ali')->assertSet('role_id', (string) $pdaRole->id)
+            ->set('name', 'Ali V.')->set('password', '')->set('role_id', (string) $admins->id)
             ->call('save')->assertRedirect('/admin/users');
         $this->assertSame($hash, $ali->fresh()->password);
         $this->assertSame('Ali V.', $ali->fresh()->name);
-        $this->assertNull($ali->fresh()->menu_access);
+        $this->assertSame('admin', $ali->fresh()->role);
 
-        // a new operator needs a password; duplicate login is refused; operators cannot reach the screen
+        // a new user needs a password and a role; duplicate login is refused; operators cannot reach the screen
         Livewire::test(UserForm::class)->set('name', 'X')->set('email', 'x@rsg.uz')->call('save')->assertHasErrors('password');
         Livewire::test(UserForm::class)->set('name', 'X')->set('email', 'ali@rsg.uz')->set('password', 'secret123')->call('save')->assertHasErrors('email');
-        $this->actingAs($ali)->get('/admin/users')->assertForbidden();
-        Livewire::actingAs($ali)->test(UserForm::class)->assertForbidden();
+        $this->actingAs($this->operator())->get('/admin/users')->assertForbidden();
+        Livewire::actingAs($this->operator())->test(UserForm::class)->assertForbidden();
     }
 
     public function test_admin_cannot_lock_themselves_out(): void
     {
         $admin = $this->admin();
 
-        Livewire::actingAs($admin)->test(UserForm::class, ['record' => $admin->id])->set('role', 'user')->set('is_active', false)->call('save');
+        Livewire::actingAs($admin)->test(UserForm::class, ['record' => $admin->id])->set('role_id', (string) \App\Models\Role::where('name', 'PDA operator')->value('id'))->set('is_active', false)->call('save');
 
         $this->assertSame('admin', $admin->fresh()->role);
         $this->assertTrue($admin->fresh()->is_active);
@@ -137,7 +142,8 @@ class TeamFeaturesTest extends TestCase
 
     public function test_menu_access_hides_and_blocks_items(): void
     {
-        $user = $this->operator(['menu_access' => ['receiving']]);
+        $role = \App\Models\Role::create(['name' => 'Faqat qabul', 'permissions' => ['pda.receiving']]);
+        $user = $this->operator(['role_id' => $role->id]);
         $stock = Warehouse::create(['name' => 'A']);
 
         $this->actingAs($user)->get('/')->assertOk()->assertSee('Qabul qilish')->assertDontSee('Narxni tekshirish')->assertDontSee('Inventarizatsiya');
@@ -346,60 +352,43 @@ class TeamFeaturesTest extends TestCase
         $this->actingAs($user)->get("/docs/{$doc->id}/browse?q=999")->assertSee('Sut');
     }
 
-    public function test_admin_manages_extra_barcodes_and_inactive_items_are_not_scannable(): void
+    public function test_admin_item_card_is_view_only_and_inactive_items_are_not_scannable(): void
     {
         $admin = $this->admin();
-        $user = $this->operator();
+        $item = Item::create(['code' => 'A1', 'barcode' => '100', 'name' => 'Sut', 'unit' => 'dona', 'price' => 5, 'is_active' => true]);
+        $item->barcodes()->create(['barcode' => '200', 'qty_in_pack' => 12]);
         $this->actingAs($admin);
-        $fill = fn ($component, array $barcodes, string $code = 'A1', string $main = '100') => $component->set('code', $code)->set('barcode', $main)->set('name', 'Sut')->set('unit', 'dona')->set('price', '5')->set('barcodes', $barcodes);
-        $rows = [['barcode' => '200', 'qty_in_pack' => '12', 'is_active' => true], ['barcode' => '300', 'qty_in_pack' => '1', 'is_active' => true]];
 
-        $fill(Livewire::test(ItemForm::class), $rows)->call('save')->assertRedirect('/admin/items');
-        $item = Item::where('code', 'A1')->first();
-        $this->assertEquals([200 => 12, 300 => 1], $item->barcodes->pluck('qty_in_pack', 'barcode')->map(fn ($v) => $v + 0)->all());
+        // the card shows the Adines data; it has no save action
+        Livewire::test(ItemForm::class, ['record' => $item->id])->assertSee('200')->assertSee('12');
+        $this->assertFalse(method_exists(ItemForm::class, 'save'));
+        $this->get("/admin/items/{$item->id}/edit")->assertOk()->assertDontSee('wire:submit', false);
 
-        // a barcode used by another item is rejected and nothing is saved
-        $fill(Livewire::test(ItemForm::class), [['barcode' => '200', 'qty_in_pack' => '1', 'is_active' => true]], 'A2', '101')->call('save')->assertHasErrors('barcodes');
-        $this->assertNull(Item::where('code', 'A2')->first());
-
-        $this->flushSession(); // drop the old input flashed by the failed POST above
-        Livewire::test(ItemForm::class, ['record' => $item->id])->assertSet('barcodes.0.barcode', '200')->assertSet('barcodes.0.qty_in_pack', '12');
-        $this->get("/admin/items/{$item->id}/edit")->assertOk();
-
-        // deactivating hides the item from the PDA
+        // an inactive item is hidden from the PDA
         $this->assertNotNull(Item::resolve('100'));
-        Livewire::test(ItemForm::class, ['record' => $item->id])->set('is_active', false)->call('save');
+        $item->update(['is_active' => false]);
         $this->assertNull(Item::resolve('100'));
         $this->assertNull(Item::resolve('200'));
     }
 
     // ---------------------------------------------------------------- master data
 
-    public function test_admin_manages_warehouses_and_counterparties(): void
+    public function test_master_data_cards_are_view_only_with_no_new_button(): void
     {
         $admin = $this->admin();
-
         $this->actingAs($admin);
+        $main = Warehouse::create(['code' => 'MAIN', 'name' => 'Asosiy']);
+        $cp = \App\Models\Counterparty::create(['name' => 'ACME', 'stir' => '301234567']);
+        $pt = \App\Models\PriceType::create(['name' => 'Chakana']);
 
-        Livewire::test(WarehouseForm::class)->set('data.name', 'Asosiy')->set('data.code', 'MAIN')->call('save')->assertRedirect('/admin/warehouses');
-        Livewire::test(WarehouseForm::class)->set('data.name', 'Boshqa')->set('data.code', 'MAIN')->call('save')->assertHasErrors('data.code');
-        $this->get('/admin/warehouses')->assertOk()->assertSee('Asosiy');
-        $main = Warehouse::where('code', 'MAIN')->first();
-        Livewire::test(WarehouseForm::class, ['record' => $main->id])->assertSet('data.name', 'Asosiy')->set('data.name', 'Asosiy ombor')->call('save');
-        $this->assertSame('Asosiy ombor', $main->fresh()->name);
-        $this->get("/admin/warehouses/{$main->id}/edit")->assertOk()->assertSee('Omborni tahrirlash');
+        foreach (['warehouses' => $main, 'counterparties' => $cp, 'price-types' => $pt] as $url => $record) {
+            $this->get("/admin/{$url}")->assertOk()->assertSee($record->name)->assertDontSee('+ Yangi')->assertDontSee("/admin/{$url}/create", false);
+            $this->get("/admin/{$url}/create")->assertNotFound();
+            $this->get("/admin/{$url}/{$record->id}/edit")->assertOk()->assertSee('faqat ko‘rish')->assertDontSee('wire:submit', false)->assertDontSee('Saqlash');
+        }
 
-        Livewire::test(CounterpartyForm::class)->set('data.name', 'ACME')->set('data.stir', '301234567')->call('save')->assertRedirect('/admin/counterparties');
-        Livewire::test(CounterpartyForm::class)->set('data.name', 'Dup')->set('data.stir', '301234567')->call('save')->assertHasErrors('data.stir');
-        Livewire::test(CounterpartyForm::class)->set('data.name', 'Bad')->set('data.stir', '12ab')->call('save')->assertHasErrors('data.stir');
-        Livewire::test(CounterpartyIndex::class)->set('q', '3012')->assertSee('ACME');
-        Livewire::test(CounterpartyIndex::class)->set('q', 'zzz')->assertDontSee('ACME');
-        $this->get('/admin/counterparties')->assertOk()->assertSee('ACME');
-
-        // a deactivated warehouse disappears from the document dropdown
-        Warehouse::where('code', 'MAIN')->update(['is_active' => false]);
-        $this->actingAs($this->operator())->get('/docs/type/stocktaking/create')->assertDontSee('Asosiy');
-        $this->assertSame(1, Counterparty::count());
+        $this->assertFalse(method_exists(WarehouseForm::class, 'save'));
+        $this->get('/admin/items')->assertDontSee('+ Yangi');
     }
 
     // ---------------------------------------------------------------- devices & keyboard

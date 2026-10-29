@@ -16,6 +16,11 @@ class Directory extends PdaPage
     public function search(): void
     {
         $this->q = trim($this->q);
+
+        // a scan that names exactly one item opens its card; anything else lists the matches
+        if ($this->q !== '' && ($hit = Item::resolve($this->q))) {
+            $this->redirect(route('item', $hit[0]->id));
+        }
     }
 
     public function render()
@@ -23,7 +28,18 @@ class Directory extends PdaPage
         $q = trim($this->q);
 
         return $this->page('livewire.pda.directory', [
-            'items' => filled($q) ? Item::active()->withSum('stocks', 'qty')->search($q)->orderBy('name')->limit(50)->get() : collect(),
+            'items' => filled($q) ? $this->shopItems($q) : collect(),
         ]);
+    }
+
+    /** Items with the stock and price of the user's shop (all shops / base price for a user not tied to one). */
+    private function shopItems(string $q)
+    {
+        $user = auth()->user();
+        $items = Item::active()
+            ->withSum(['stocks as stocks_sum_qty' => fn ($s) => $s->when($user->accessibleWarehouseIds(), fn ($w, $ids) => $w->whereIn('warehouse_id', $ids))], 'qty')
+            ->search($q)->orderBy('name')->limit(50)->get();
+
+        return Item::withShopPrices($items, $user->shopPriceTypeId());
     }
 }

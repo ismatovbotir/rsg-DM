@@ -9,23 +9,16 @@
     </div>
 
     <table>
-        <thead><tr><th>Ism</th><th>Login (email)</th><th>Rol</th><th>Bo‘limlar</th><th>Holat</th><th>Oxirgi kirish</th><th></th></tr></thead>
+        <thead><tr><th>Ism</th><th>Login (email)</th><th>Rol</th><th>Do‘kon</th><th>Holat</th><th>Oxirgi kirish</th></tr></thead>
         <tbody>
             @foreach ($users as $user)
                 <tr wire:key="user-{{ $user->id }}">
-                    <td>{{ $user->name }}</td>
+                    <td><a class="lnk" href="{{ route('admin.users.edit', $user) }}">{{ $user->name }}</a></td>
                     <td>{{ $user->email }}</td>
                     <td>{{ $user->role_label }}</td>
-                    <td>
-                        @if ($user->isAdmin() || $user->menu_access === null)
-                            Barchasi
-                        @else
-                            {{ count($user->menu_access) }} / {{ $menuCount }}
-                        @endif
-                    </td>
+                    <td>{{ $user->warehouse?->name }}</td>
                     <td><span class="badge {{ $user->is_active ? 'completed' : 'error' }}">{{ $user->is_active ? 'Faol' : 'O‘chirilgan' }}</span></td>
                     <td>{{ $user->last_login_at?->format('d.m.Y H:i') }}</td>
-                    <td class="text-right"><a class="btn gray" href="{{ route('admin.users.edit', $user) }}">Tahrirlash</a></td>
                 </tr>
             @endforeach
         </tbody>

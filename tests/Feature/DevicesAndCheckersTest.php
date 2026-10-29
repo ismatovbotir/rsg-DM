@@ -10,10 +10,11 @@ use App\Models\PriceType;
 use App\Models\Printer;
 use App\Models\User;
 use App\Services\PriceTagPrinter;
-use App\Livewire\Admin\Checkers\Designer as CheckerDesigner;
+use App\Livewire\Admin\Themes\Designer as ThemeDesigner;
 use App\Livewire\Admin\Checkers\Form as CheckerForm;
 use App\Livewire\Admin\Checkers\Index as CheckerIndex;
 use App\Support\CheckerDesign;
+use App\Support\CheckerItem;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Livewire\Admin\Devices\Form as DeviceForm;
 use App\Livewire\Admin\Items\Form as ItemForm;
@@ -104,16 +105,18 @@ class DevicesAndCheckersTest extends TestCase
         Livewire::actingAs($user)->test(CheckerIndex::class)->assertForbidden();
     }
 
-    public function test_the_screen_design_is_edited_with_a_live_preview_and_reaches_the_terminal(): void
+    public function test_a_theme_is_designed_with_a_live_preview_of_every_screen_and_reaches_the_terminal(): void
     {
         $admin = $this->admin();
         $this->item();
         $checker = PriceChecker::create(['name' => 'Zal', 'is_active' => true]);
         $token = $checker->regenerateToken();
+        $this->seed(\Database\Seeders\CheckerThemeSeeder::class); // the sample 10-inch design becomes the default
+        $default = \App\Models\CheckerTheme::default();
         $before = $checker->fresh()->screenVersion();
 
-        $designer = Livewire::actingAs($admin)->test(CheckerDesigner::class, ['checkerId' => $checker->id]);
-        $designer->assertSee('data-state="result"', false)->assertSee('Sut');
+        $designer = Livewire::actingAs($admin)->test(ThemeDesigner::class, ['record' => $default->id]);
+        $designer->assertSet('name', $default->name)->assertSee('data-state="result"', false)->assertSee('Sut');
 
         // every change shows in the preview at once (no save needed), and only validated values reach the CSS
         $designer->set('design.bg', '#112233')->assertSee('--bg:#112233', false);
@@ -122,23 +125,86 @@ class DevicesAndCheckersTest extends TestCase
             ->set('state', 'idle')->assertSee('Skanerlang')->assertSee('data-layout="split"', false)->assertSee('rotate(90deg)', false);
         $this->assertSame($before, $checker->fresh()->screenVersion()); // not published yet
 
+        // the pairing (auth) screen is part of the preview
+        $designer->set('design.auth_title', 'Ulang')->set('state', 'auth')->assertSee('data-state="auth"', false)->assertSee('Ulang');
+
         $designer->call('save')->assertSee('Dizayn saqlandi');
         $checker = $checker->fresh();
         $this->assertSame('#112233', $checker->screen['bg']);
         $this->assertNotSame($before, $checker->screenVersion());
 
-        // the terminal renders the saved design and notices when it changes
+        // the terminal (no own theme = the default one) renders the saved design and notices when it changes
         auth()->logout();
         $this->get('/pricechecker/activate/'.$token);
         $this->get('/pricechecker')->assertOk()->assertSee('--bg:#112233', false)->assertSee('Skanerlang')->assertSee('data-layout="split"', false);
         $this->getJson('/pricechecker/version')->assertJson(['v' => $checker->screenVersion()]);
+        $this->get('/pricechecker/activate')->assertRedirect(route('checker.screen')); // already paired
+        $this->flushSession();
+        // the cookie alone (session gone) opens the screen and skips the pairing page
+        $this->flushSession();
+        $this->defaultCookies = ['checker_token' => $token];
+        $this->get('/pricechecker')->assertOk();
+        $this->flushSession();
+        $this->get('/pricechecker/activate')->assertRedirect(route('checker.screen'));
+        $this->flushSession();
+        $this->defaultCookies = []; // an unpaired terminal sees the auth screen
+        $this->get('/pricechecker/activate')->assertOk()->assertSee('data-state="auth"', false)->assertSee('Ulang')->assertSee('--bg:#112233', false);
+        $this->get('/pricechecker/activate/'.$token);
 
-        // resetting goes back to the defaults; a design can be copied from another checker
-        $other = PriceChecker::create(['name' => 'Boshqa', 'is_active' => true, 'design' => ['bg' => '#abcdef']]);
-        Livewire::actingAs($admin)->test(CheckerDesigner::class, ['checkerId' => $checker->id])
-            ->call('copyFrom', $other->id)->assertSet('design.bg', '#abcdef')
-            ->call('resetDefaults')->assertSet('design.bg', CheckerDesign::DEFAULTS['bg']);
+        // a checker picks its own theme
+        $other = \App\Models\CheckerTheme::create(['name' => 'Yashil', 'design' => ['bg' => '#00aa00']]);
+        $checker->update(['theme_id' => $other->id]);
+        $this->get('/pricechecker')->assertSee('--bg:#00aa00', false);
+
+        // idle banners: only checker/ or items/ file names, at most 8
+        $d = CheckerDesign::sanitize(['banners' => ['checker/a.jpg', '../x.png', 'checker/a.jpg', 'checker/b.jpg'], 'banner_interval' => 3]);
+        $this->assertSame(['checker/a.jpg', 'checker/b.jpg'], $d['banners']);
+        $this->assertCount(8, CheckerDesign::sanitize(['banners' => array_map(fn ($i) => "checker/p{$i}.jpg", range(1, 12))])['banners']);
+        Livewire::actingAs($admin)->test(ThemeDesigner::class, ['record' => $default->id])->set('design.banners', ['checker/a.jpg', 'checker/b.jpg'])->set('state', 'idle')
+            ->assertSee('uploads/checker/a.jpg', false)->assertSee('pcs-slide-pcs-preview', false)
+            ->call('removeBanner', 0)->assertSet('design.banners', ['checker/b.jpg']);
+
+        // 22 ready colour sets, each a valid design
+        $this->assertCount(22, CheckerDesign::PALETTES);
+        foreach (array_keys(CheckerDesign::PALETTES) as $key) {
+            $this->assertSame(CheckerDesign::palette($key), array_intersect_key(CheckerDesign::sanitize(CheckerDesign::palette($key)), CheckerDesign::COLOR_LABELS));
+        }
+        Livewire::actingAs($admin)->test(ThemeDesigner::class, ['record' => $default->id])->call('applyPalette', 'black_yellow')
+            ->assertSet('design.bg', '#111111')->assertSet('design.price_color', '#ffe600')->call('applyPalette', 'nope')->assertSet('design.bg', '#111111');
+
+        // new theme, copy from another, reset
+        $new = Livewire::actingAs($admin)->test(ThemeDesigner::class)->set('name', 'Yangi')->call('copyFrom', $other->id)->assertSet('design.bg', '#00aa00')
+            ->call('save');
+        $this->assertDatabaseHas('checker_themes', ['name' => 'Yangi']);
+        Livewire::actingAs($admin)->test(ThemeDesigner::class, ['record' => $other->id])->call('resetDefaults')->assertSet('design.bg', CheckerDesign::DEFAULTS['bg']);
     }
+
+    public function test_the_checker_screen_shows_picture_promo_second_price_and_a_stock_status(): void
+    {
+        $item = $this->item();
+        $item->update(['image' => 'items/photo.png']);
+        $promo = \App\Models\PriceType::create(['name' => 'Eski', 'is_active' => true]);
+        $card = \App\Models\PriceType::create(['name' => 'Karta', 'is_active' => true]);
+        \App\Models\ItemPrice::create(['item_id' => $item->id, 'price_type_id' => $promo->id, 'price' => $item->price + 1000]);
+        \App\Models\ItemPrice::create(['item_id' => $item->id, 'price_type_id' => $card->id, 'price' => $item->price - 500]);
+        \App\Models\ItemStock::create(['item_id' => $item->id, 'warehouse_id' => \App\Models\Warehouse::create(['code' => 'W', 'name' => 'W'])->id, 'qty' => 2]);
+
+        $theme = \App\Models\CheckerTheme::create(['name' => 'T', 'is_default' => true, 'design' => [
+            'old_price_type_id' => $promo->id, 'second_price_type_id' => $card->id, 'show_stock' => true, 'stock_low' => 5, 'logo' => 'checker/logo.png', 'bg_image' => 'checker/bg.jpg',
+        ]]);
+        $checker = PriceChecker::create(['name' => 'Zal', 'is_active' => true, 'theme_id' => $theme->id]);
+        $this->get('/pricechecker/activate/'.$checker->regenerateToken());
+
+        $this->getJson('/pricechecker/price?code='.$item->barcode)->assertOk()->assertJson([
+            'found' => true, 'promo' => true, 'image' => asset('uploads/items/photo.png'),
+            'old_price_text' => CheckerItem::money($item->price + 1000), 'second_price_text' => CheckerItem::money($item->price - 500),
+            'stock' => ['state' => 'low', 'text' => 'Oz qoldi'],
+        ]);
+        $this->get('/pricechecker')->assertSee('uploads/checker/logo.png', false)->assertSee(e("--bg-image:url('".asset('uploads/checker/bg.jpg')."')"), false);
+        // paths outside checker/ or items/ are dropped
+        $this->assertSame('', CheckerDesign::sanitize(['logo' => '../../.env'])['logo']);
+    }
+
     public function test_only_one_printer_prints_price_tags_and_pdas_can_get_their_own(): void
     {
         $admin = $this->admin();
@@ -202,7 +268,7 @@ class DevicesAndCheckersTest extends TestCase
         $page = $this->actingAs($admin)->get("/admin/items/{$item->id}/edit")->assertOk();
         $page->assertSee("tab = 'barcodes'", false)->assertSee("tab = 'stock'", false)
             ->assertSee('999')->assertSee('888');
-        Livewire::test(ItemForm::class, ['record' => $item->id])->assertSet('barcodes.0.barcode', '999')->assertSet('barcodes.1.barcode', '888')->assertSet('barcodes.1.is_active', false);
+        Livewire::test(ItemForm::class, ['record' => $item->id])->assertSee('999')->assertSee('888')->assertSee('Nofaol'); // view only
 
         $page->assertSee('Hujjatlar')->assertSee('Qurilmalar')->assertSee('Ma’lumotnomalar', false);
         foreach (\App\Models\Document::types() as $key => $title) {

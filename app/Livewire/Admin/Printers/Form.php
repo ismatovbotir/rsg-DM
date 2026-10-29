@@ -13,6 +13,8 @@ class Form extends AdminPage
 
     public string $name = '';
 
+    public string $kind = 'lan';
+
     public string $host = '';
 
     public string $port = '9100';
@@ -31,7 +33,7 @@ class Form extends AdminPage
             $p = Printer::findOrFail($record);
             $this->recordId = $p->id;
             $this->fill([
-                'name' => $p->name, 'host' => $p->host, 'port' => (string) $p->port, 'label_width_mm' => (string) $p->label_width_mm,
+                'name' => $p->name, 'kind' => $p->kind, 'host' => $p->host, 'port' => (string) $p->port, 'label_width_mm' => (string) $p->label_width_mm,
                 'label_height_mm' => (string) $p->label_height_mm, 'is_price_tag' => $p->is_price_tag, 'is_active' => $p->is_active,
             ]);
         }
@@ -41,13 +43,19 @@ class Form extends AdminPage
     {
         $data = $this->validate([
             'name' => 'required|string|max:100',
-            'host' => ['required', 'string', 'max:100', 'regex:/^[A-Za-z0-9._-]+$/'], // IP or LAN host name only
-            'port' => 'required|integer|min:1|max:65535',
+            'kind' => 'required|in:lan,bluetooth',
+            'host' => [$this->kind === 'lan' ? 'required' : 'nullable', 'string', 'max:100', 'regex:/^[A-Za-z0-9._-]+$/'], // IP or LAN host name only
+            'port' => [$this->kind === 'lan' ? 'required' : 'nullable', 'integer', 'min:1', 'max:65535'],
             'label_width_mm' => 'required|integer|min:20|max:200',
             'label_height_mm' => 'required|integer|min:15|max:300',
             'is_price_tag' => 'boolean',
             'is_active' => 'boolean',
         ], ['host.regex' => 'Manzil faqat IP yoki tarmoq nomi bo‘lishi kerak.'], ['name' => 'Nomi', 'host' => 'Manzil', 'port' => 'Port']);
+
+        if ($data['kind'] === 'bluetooth') {
+            $data['host'] = '';
+            $data['port'] = 9100;
+        }
 
         $priceTag = $data['is_price_tag'];
         $data['is_price_tag'] = false; // set through makePriceTag() so only one printer holds it

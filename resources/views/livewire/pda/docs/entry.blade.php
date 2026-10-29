@@ -16,10 +16,12 @@
 
             @if ($doc->isPriceCheck())
                 <div class="kv"><span>Tizimdagi narx</span><span class="text-3xl font-bold">{{ number_format($priceSystem, 0, '.', ' ') }}</span></div>
-                <label class="lbl">Javondagi narx<span class="req"> *</span>
-                    <input class="field" type="number" step="any" min="0" wire:model="shelf_price" required autofocus autocomplete="off" @kb>
+                <div class="sub mb-2">Javondagi yorliqdagi narx shu narxga tengmi?</div>
+                <label class="lbl">Javondagi narx <small>(ixtiyoriy, noto‘g‘ri bo‘lsa)</small>
+                    <input class="field" type="number" step="any" min="0" wire:model="shelf_price" autocomplete="off" @kb>
                 </label>
-                <div class="sub">Narx mos kelmasa, yorliq chop etish ro‘yxatiga qo‘shiladi.</div>
+                @error('shelf_price')<div class="flash error !mx-0">{{ $message }}</div>@enderror
+                <div class="sub">Noto‘g‘ri bo‘lsa, yangi yorliq navbatga qo‘shiladi va tekshiruv oxirida chop etiladi.</div>
             @endif
             @if ($doc->canEditQty())
                 <label class="lbl">Miqdor ({{ $item->unit }})<span class="req"> *</span>
@@ -54,7 +56,14 @@
         </form>
 
         <x-slot:footer>
-            <div class="footer"><button class="btn green" form="entry">{{ $doc->isPriceCheck() ? 'Tasdiqlash' : 'Qo‘shish' }}</button></div>
+            @if ($doc->isPriceCheck())
+                <div class="footer grid grid-cols-2 gap-2">
+                    <button type="button" class="btn red" wire:click="verdict('wrong')">Noto‘g‘ri</button>
+                    <button type="button" class="btn green" wire:click="verdict('ok')">To‘g‘ri</button>
+                </div>
+            @else
+                <div class="footer"><button class="btn green" form="entry">Qo‘shish</button></div>
+            @endif
         </x-slot:footer>
     </x-pda.page>
 </div>

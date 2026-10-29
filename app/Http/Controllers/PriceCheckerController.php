@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Item;
+use App\Models\CheckerTheme;
 use App\Models\PriceChecker;
+use App\Support\CheckerItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cookie;
 
@@ -28,17 +30,8 @@ class PriceCheckerController extends Controller
         }
 
         [$item] = $found;
-        $price = (float) $item->priceFor($checker->price_type_id);
 
-        return response()->json([
-            'found' => true,
-            'name' => $item->name,
-            'unit' => $item->unit,
-            'code' => (string) $item->code,
-            'price' => $price,
-            'price_text' => number_format($price, 0, '.', ' '),
-            'v' => $this->version($checker),
-        ]);
+        return response()->json(CheckerItem::payload($item, $checker->screen, $checker->price_type_id) + ['v' => $this->version($checker)]);
     }
 
     /** The screen polls this while idle and reloads itself when the admin changed the design. */
@@ -53,9 +46,16 @@ class PriceCheckerController extends Controller
     }
 
     /** The "scan the QR code" page, shown to a terminal that has no token yet. */
-    public function activateShow()
+    public function activateShow(Request $request)
     {
-        return view('pricechecker.activate');
+        // a terminal that already holds a valid token (session or 5-year cookie) goes straight to the screen
+        if (PriceChecker::byToken($request->session()->get('checker_token') ?? $request->cookie('checker_token'))) {
+            return redirect()->route('checker.screen');
+        }
+
+        $theme = CheckerTheme::default();
+
+        return view('pricechecker.activate', ['d' => $theme?->screen ?? \App\Support\CheckerDesign::merge(null)]);
     }
 
     /** The QR content opens this URL directly (camera) or is typed in by a keyboard-wedge scanner (form). */
@@ -70,7 +70,7 @@ class PriceCheckerController extends Controller
 
         $request->session()->regenerate();
         $request->session()->put('checker_token', $code);
-        Cookie::queue(Cookie::make('checker_token', $code, 60 * 24 * 365 * 5, null, null, null, true));
+        Cookie::queue(Cookie::make('checker_token', $code, 60 * 24 * 365 * 5, null, null, null, true, false, 'lax'));
 
         return redirect()->route('checker.screen');
     }

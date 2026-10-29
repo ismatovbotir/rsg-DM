@@ -10,6 +10,11 @@ class Warehouse extends Model
 
     protected $casts = ['is_active' => 'boolean'];
 
+    public function priceType()
+    {
+        return $this->belongsTo(PriceType::class);
+    }
+
     public function scopeActive($query)
     {
         return $query->where('is_active', true);

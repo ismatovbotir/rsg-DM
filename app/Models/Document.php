@@ -17,7 +17,7 @@ class Document extends Model
     protected $fillable = [
         'type', 'status', 'onec_status', 'print_count', 'printed_at', 'user_id',
         'doc_date', 'counterparty_id', 'warehouse_id', 'warehouse_to_id', 'price_type_id', 'reason', 'comment',
-        'completed_at', 'synced_at', 'onec_error',
+        'completed_at', 'synced_at', 'onec_error', 'scope', 'group_id',
     ];
 
     protected $casts = [
@@ -221,6 +221,51 @@ class Document extends Model
     public function warehouseTo()
     {
         return $this->belongsTo(Warehouse::class, 'warehouse_to_id');
+    }
+
+    public const SCOPES = ['all' => 'Butun do‘kon', 'group' => 'Guruh', 'free' => 'Erkin skanerlash'];
+
+    public function group()
+    {
+        return $this->belongsTo(Group::class);
+    }
+
+    /** True when the check has a list of items to go through (the whole shop or a group), so it has progress. */
+    public function hasCheckList(): bool
+    {
+        return $this->isPriceCheck() && in_array($this->scope, ['all', 'group'], true);
+    }
+
+    /**
+     * Items that belong on the shelf for this check: active items of the group (or all), and, when the shop has stock data,
+     * only those in stock there. A shop without stock data lists every active item.
+     */
+    public function checkItemsQuery()
+    {
+        $shop = $this->warehouse_id;
+
+        return Item::active()
+            ->when($this->scope === 'group' && $this->group_id, fn ($q) => $q->whereIn('group_id', Group::branchIds((int) $this->group_id)))
+            ->when($shop && ItemStock::where('warehouse_id', $shop)->exists(), fn ($q) => $q->whereHas('stocks', fn ($s) => $s->where('warehouse_id', $shop)->where('qty', '>', 0)));
+    }
+
+    /** @return array{0: int, 1: int} items checked so far, items to check */
+    public function checkProgress(): array
+    {
+        if (! $this->hasCheckList()) {
+            return [0, 0];
+        }
+
+        $total = $this->checkItemsQuery()->count();
+        $checked = $this->checkItemsQuery()->whereIn('items.id', $this->lines()->select('item_id'))->count();
+
+        return [$checked, $total];
+    }
+
+    /** The document's price list, else the one of its warehouse (a shop has its own price list). */
+    public function effectivePriceTypeId(): ?int
+    {
+        return $this->price_type_id ?: ($this->warehouse?->price_type_id ?: null);
     }
 
     public function priceType()

@@ -8,6 +8,9 @@ use App\Livewire\Admin\PriceTags as PriceTagsLw;
 use App\Livewire\Admin\Documents as DocumentsLw;
 use App\Livewire\Admin\Items as ItemsLw;
 use App\Livewire\Admin\Labels as LabelsLw;
+use App\Livewire\Admin\Themes as ThemesLw;
+use App\Livewire\Admin\Roles as RolesLw;
+use App\Livewire\Admin\Badges as BadgesLw;
 use App\Livewire\Admin\Messages as MessagesLw;
 use App\Livewire\Admin\Tasks as TasksLw;
 use App\Livewire\Admin\Printers as PrintersLw;
@@ -15,6 +18,7 @@ use App\Livewire\Admin\Users as UsersLw;
 use App\Livewire\Admin\Counterparties as CounterpartiesLw;
 use App\Livewire\Admin\PriceTypes as PriceTypesLw;
 use App\Livewire\Admin\Warehouses as WarehousesLw;
+use App\Livewire\Admin\Groups as GroupsLw;
 use App\Http\Controllers\PriceCheckerController;
 use App\Http\Controllers\DevLoginController;
 use App\Http\Controllers\LoginController;
@@ -26,6 +30,7 @@ Route::get('/dev/login/{role}', DevLoginController::class)->name('dev.login');
 
 Route::middleware(['guest', 'device'])->group(function () {
     Route::view('/login', 'login')->name('login'); // hosts the Livewire login form
+    Route::get('/login/badge/{token}', [LoginController::class, 'badge'])->middleware('throttle:20,1')->name('login.badge');
 });
 Route::post('/logout', [LoginController::class, 'logout'])->middleware('auth')->name('logout');
 
@@ -46,9 +51,11 @@ Route::get('/', Pda\Menu::class)->middleware(['device', 'active', 'login.guests'
 Route::middleware(['auth', 'active', 'device'])->group(function () {
     Route::get('/m/{key}', Pda\Module::class)->name('module');
     Route::get('/settings', Pda\Settings::class)->name('settings');
+    Route::get('/printer', Pda\PrinterSettings::class)->name('printer');
 
     Route::middleware('menu:directories')->group(function () {
         Route::get('/directory', Pda\Directory::class)->name('directory');
+        Route::get('/item/{record}', Pda\ItemCard::class)->name('item');
         Route::get('/browse/directory', Pda\Browse::class)->name('browse.directory');
     });
 
@@ -66,7 +73,7 @@ Route::middleware(['auth', 'active', 'device'])->group(function () {
 });
 // Admin (desktop) interface
 Route::middleware(['auth', 'active', 'admin'])->prefix('admin')->name('admin.')->group(function () {
-    Route::redirect('/', '/admin/documents');
+    Route::get('/', fn () => redirect(auth()->user()->firstAdminUrl() ?? abort(403)))->name('home'); // first section the role allows
 
     Route::get('documents', DocumentsLw\Index::class)->name('documents.index');
     Route::get('documents/{record}', DocumentsLw\Show::class)->name('documents.show');
@@ -76,19 +83,22 @@ Route::middleware(['auth', 'active', 'admin'])->prefix('admin')->name('admin.')-
     Route::get('price-tags/print', [AdminPriceTagController::class, 'print'])->name('pricetags.print'); // printable sheet, not an interactive page
 
     Route::get('items', ItemsLw\Index::class)->name('items.index');
-    Route::get('items/create', ItemsLw\Form::class)->name('items.create');
     Route::get('items/{record}/edit', ItemsLw\Form::class)->name('items.edit');
 
     // Master data and people are deactivated, never deleted: documents reference them.
     Route::get('price-types', PriceTypesLw\Index::class)->name('pricetypes.index');
-    Route::get('price-types/create', PriceTypesLw\Form::class)->name('pricetypes.create');
     Route::get('price-types/{record}/edit', PriceTypesLw\Form::class)->name('pricetypes.edit');
+    Route::get('groups', GroupsLw\Index::class)->name('groups.index');
+    Route::get('groups/{record}/edit', GroupsLw\Form::class)->name('groups.edit');
     Route::get('warehouses', WarehousesLw\Index::class)->name('warehouses.index');
-    Route::get('warehouses/create', WarehousesLw\Form::class)->name('warehouses.create');
     Route::get('warehouses/{record}/edit', WarehousesLw\Form::class)->name('warehouses.edit');
     Route::get('counterparties', CounterpartiesLw\Index::class)->name('counterparties.index');
-    Route::get('counterparties/create', CounterpartiesLw\Form::class)->name('counterparties.create');
     Route::get('counterparties/{record}/edit', CounterpartiesLw\Form::class)->name('counterparties.edit');
+    Route::get('roles', RolesLw\Index::class)->name('roles.index');
+    Route::get('roles/create', RolesLw\Form::class)->name('roles.create');
+    Route::get('roles/{record}/edit', RolesLw\Form::class)->name('roles.edit');
+    Route::get('badges', BadgesLw\Index::class)->name('badges.index');
+    Route::get('badges/print', [\App\Http\Controllers\Admin\BadgeController::class, 'print'])->name('badges.print'); // printable sheet
     Route::get('users', UsersLw\Index::class)->name('users.index');
     Route::get('users/create', UsersLw\Form::class)->name('users.create');
     Route::get('users/{record}/edit', UsersLw\Form::class)->name('users.edit');
@@ -100,6 +110,9 @@ Route::middleware(['auth', 'active', 'admin'])->prefix('admin')->name('admin.')-
     Route::get('messages/create', MessagesLw\Form::class)->name('messages.create');
     Route::get('messages/{record}', MessagesLw\Show::class)->name('messages.show');
 
+    Route::get('checker-themes', ThemesLw\Index::class)->name('themes.index');
+    Route::get('checker-themes/create', ThemesLw\Designer::class)->name('themes.create');
+    Route::get('checker-themes/{record}/edit', ThemesLw\Designer::class)->name('themes.edit');
     Route::get('label-templates', LabelsLw\Index::class)->name('labels.index');
     Route::get('label-templates/create', LabelsLw\Designer::class)->name('labels.create');
     Route::get('label-templates/{record}/edit', LabelsLw\Designer::class)->name('labels.edit');

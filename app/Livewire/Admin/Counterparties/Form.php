@@ -4,8 +4,8 @@ namespace App\Livewire\Admin\Counterparties;
 
 use App\Livewire\Admin\CrudForm;
 use App\Models\Counterparty;
-use Illuminate\Validation\Rule;
 
+/** Counterparty card (view only, data comes from Adines). */
 class Form extends CrudForm
 {
     protected function model(): string
@@ -13,9 +13,9 @@ class Form extends CrudForm
         return Counterparty::class;
     }
 
-    protected function titles(): array
+    protected function listTitle(): string
     {
-        return ['new' => 'Yangi kontragent', 'edit' => 'Kontragentni tahrirlash'];
+        return 'Kontragentlar';
     }
 
     protected function indexRoute(): string
@@ -23,22 +23,22 @@ class Form extends CrudForm
         return 'admin.counterparties.index';
     }
 
-    protected function saved(): string
-    {
-        return 'Kontragent saqlandi.';
-    }
-
-    protected function messages(): array
-    {
-        return ['data.stir.regex' => 'STIR 9-14 ta raqamdan iborat bo‘lishi kerak.'];
-    }
-
     protected function fields(): array
     {
         return [
-            'name' => ['label' => 'Nomi', 'type' => 'text', 'rules' => 'required|string|max:255', 'attrs' => ['required' => 'required']],
-            'stir' => ['label' => 'STIR', 'type' => 'text', 'rules' => ['nullable', 'regex:/^\\d{9,14}$/', Rule::unique('counterparties', 'stir')->ignore($this->recordId)], 'attrs' => ['inputmode' => 'numeric', 'maxlength' => 14]],
-            'is_active' => ['label' => 'Faol', 'type' => 'checkbox', 'rules' => 'boolean'],
+            ['Nomi', 'name'],
+            ['To‘liq nomi', 'full_name'],
+            ['Turi', fn ($c) => $c->type === 'employee' ? 'Xodim' : 'Kontragent'],
+            ['STIR (INN)', 'stir'],
+            ['Telefon', 'phone'],
+            ['Manzil', 'address'],
+            ['QQS to‘lovchi', fn ($c) => $c->is_vat_payer ? 'Ha' : 'Yo‘q'],
+            ['Adines kodi', 'id'],
         ];
+    }
+
+    protected function figures($record): array
+    {
+        return [['Adines kodi', $record->id], ['STIR', $record->stir ?: '—'], ['Hujjatlar', \App\Models\Document::where('counterparty_id', $record->id)->count()]];
     }
 }

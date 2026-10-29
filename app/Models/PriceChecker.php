@@ -14,14 +14,19 @@ use Illuminate\Support\Str;
  */
 class PriceChecker extends Model
 {
-    protected $fillable = ['name', 'price_type_id', 'is_active', 'design'];
+    protected $fillable = ['name', 'price_type_id', 'is_active', 'theme_id'];
 
     protected $hidden = ['token', 'token_hash'];
 
     protected $casts = [
         'is_active' => 'boolean', 'activated_at' => 'datetime', 'last_seen_at' => 'datetime',
-        'token' => 'encrypted', 'design' => 'array',
+        'token' => 'encrypted',
     ];
+
+    public function theme()
+    {
+        return $this->belongsTo(CheckerTheme::class);
+    }
 
     public function priceType()
     {
@@ -50,10 +55,10 @@ class PriceChecker extends Model
         return $this->token ? url('/pricechecker/activate/'.$this->token) : null;
     }
 
-    /** Screen settings with defaults filled in. */
+    /** Screen settings: the chosen theme, else the default theme, else the built-in defaults. */
     public function getScreenAttribute(): array
     {
-        return CheckerDesign::merge($this->design);
+        return ($this->theme ?? CheckerTheme::default())?->screen ?? CheckerDesign::merge(null);
     }
 
     /** Changes when the admin edits what the terminal shows, so the terminal knows to reload (not when it is merely seen). */

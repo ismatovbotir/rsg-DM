@@ -3,49 +3,32 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
     <title>@yield('title', 'Boshqaruv') — {{ config('menu.app_name') }}</title>
     <link rel="stylesheet" href="{{ asset('css/admin.css') }}?v={{ @filemtime(public_path('css/admin.css')) }}">
     <link rel="stylesheet" href="{{ asset('css/checker.css') }}?v={{ @filemtime(public_path('css/checker.css')) }}">
 </head>
 <body>
     <aside>
-        <div class="brand">{{ config('menu.app_name') }} · Admin</div>
-        <details class="grp" data-grp="068296c5236391499649d45deef0298b">
-            <summary>Ma’lumotnomalar</summary>
-        <a href="{{ route('admin.items.index') }}" @class(['active' => request()->routeIs('admin.items.*')])>Tovarlar</a>
-        <a href="{{ route('admin.counterparties.index') }}" @class(['active' => request()->routeIs('admin.counterparties.*')])>Kontragentlar</a>
-        <a href="{{ route('admin.warehouses.index') }}" @class(['active' => request()->routeIs('admin.warehouses.*')])>Omborlar</a>
-        <a href="{{ route('admin.pricetypes.index') }}" @class(['active' => request()->routeIs('admin.pricetypes.*')])>Narx turlari</a>
-        </details>
-        <details class="grp" data-grp="e4eadc182cf15d75de4e503abe5e753a">
-            <summary>Hujjatlar</summary>
-        <a href="{{ route('admin.documents.index') }}" @class(['active' => request()->routeIs('admin.documents.*') && ! request('type')])>Barcha hujjatlar</a>
-        @foreach (\App\Models\Document::types() as $typeKey => $typeTitle)
-            <a href="{{ route('admin.documents.index', ['type' => $typeKey]) }}" @class(['active' => request()->routeIs('admin.documents.index') && request('type') === $typeKey])>{{ $typeTitle }}</a>
+        <div class="brand flex items-center gap-2"><img src="{{ asset('img/logo.png') }}" alt="" class="h-8 w-8 rounded"><span>{{ config('menu.app_name') }}<small class="block text-[10px] font-normal opacity-70">Admin</small></span></div>
+        @php $me = auth()->user(); @endphp
+        {{-- the groups and items come from App\Support\Permissions; a role only sees what it ticked --}}
+        @foreach (\App\Support\Permissions::adminGroups() as $group)
+            @php $items = array_filter($group['items'], fn ($i) => $me->isAdmin() || $me->hasPermission($i['key'])); @endphp
+            @if ($items)
+                <details class="grp" data-grp="{{ md5($group['title']) }}">
+                    <summary>{{ $group['title'] }}</summary>
+                    @foreach ($items as $i)
+                        @php
+                            $on = $i['type'] !== null
+                                ? request()->routeIs($i['pattern']) && request('type') === $i['type']
+                                : (request()->routeIs($i['pattern']) && ! (str_starts_with($i['key'], 'admin.documents') && request('type')));
+                        @endphp
+                        <a href="{{ route($i['route'], $i['params']) }}" @class(['active' => $on])>{{ $i['title'] }}</a>
+                    @endforeach
+                </details>
+            @endif
         @endforeach
-        </details>
-        <details class="grp" data-grp="3888991cb2cf45fd2179dcc88933f167">
-            <summary>Operatsiyalar</summary>
-        <a href="{{ route('admin.tasks.index') }}" @class(['active' => request()->routeIs('admin.tasks.*')])>Vazifalar</a>
-        <a href="{{ route('admin.messages.index') }}" @class(['active' => request()->routeIs('admin.messages.*')])>Xabarlar</a>
-        </details>
-        <details class="grp" data-grp="7c1316cbffd14e2e80b35a08a7fe5884">
-            <summary>Qurilmalar</summary>
-        <a href="{{ route('admin.devices.index') }}" @class(['active' => request()->routeIs('admin.devices.*')])>PDA qurilmalar</a>
-        <a href="{{ route('admin.checkers.index') }}" @class(['active' => request()->routeIs('admin.checkers.*')])>Narx tekshirgichlar</a>
-        <a href="{{ route('admin.printers.index') }}" @class(['active' => request()->routeIs('admin.printers.*')])>Printerlar</a>
-        <a href="{{ route('admin.labels.index') }}" @class(['active' => request()->routeIs('admin.labels.*')])>Yorliq dizayneri</a>
-        <a href="{{ route('admin.pricetags.index') }}" @class(['active' => request()->routeIs('admin.pricetags.*')])>Narx yorliqlari</a>
-        </details>
-        <details class="grp" data-grp="bf386a4433b0dccb313b18a251b77b17">
-            <summary>Almashinuv</summary>
-        <a href="{{ route('admin.exchange.index') }}" @class(['active' => request()->routeIs('admin.exchange.*')])>Adines almashinuvi</a>
-        </details>
-        <details class="grp" data-grp="5b869a683815a27440315fa7e3c1c386">
-            <summary>Tizim</summary>
-        <a href="{{ route('admin.users.index') }}" @class(['active' => request()->routeIs('admin.users.*')])>Foydalanuvchilar</a>
-        </details>
-        <a href="{{ route('menu') }}">PDA interfeysi</a>
         <div class="spacer"></div>
         <form method="POST" action="{{ route('logout') }}">@csrf<button>Chiqish ({{ auth()->user()->name }})</button></form>
     </aside>

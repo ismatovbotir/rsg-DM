@@ -13,6 +13,10 @@ class PriceTagPrinter
     /** Send raw data; throws RuntimeException with a readable message when the printer is unreachable. */
     public function send(Printer $printer, string $data): void
     {
+        if ($printer->isBluetooth()) {
+            throw new RuntimeException('Bluetooth printerga serverdan yuborib bo‘lmaydi: u telefon / PDA orqali chop etadi.');
+        }
+
         $socket = @fsockopen($printer->host, $printer->port, $errno, $error, 3);
 
         if (! $socket) {
@@ -70,18 +74,43 @@ class PriceTagPrinter
      */
     public function printDocument(\App\Models\Document $document, Printer $printer): int
     {
-        $items = $document->lines()->where('check_action', PriceCheck::PRINT)->with('item')->get()->pluck('item');
+        [$count, $zpl] = $this->documentLabels($document, $printer);
 
-        if ($items->isEmpty()) {
+        if ($count === 0) {
             return 0;
         }
 
-        $this->send($printer, $items->map(fn ($item) => $this->label($printer, $item))->implode("\n"));
+        $this->send($printer, $zpl);
+        $this->markDocumentPrinted($document);
 
-        PriceCheck::queued()->whereIn('item_id', $items->pluck('id'))->update(['printed_at' => now()]);
+        return $count;
+    }
+
+    /**
+     * The labels of a document for a Bluetooth printer: the browser sends them, so they are marked printed as they are handed over.
+     * @return array{0: int, 1: string} count and ZPL
+     */
+    public function handOver(\App\Models\Document $document, Printer $printer): array
+    {
+        [$count, $zpl] = $this->documentLabels($document, $printer);
+        $count && $this->markDocumentPrinted($document);
+
+        return [$count, $zpl];
+    }
+
+    /** @return array{0: int, 1: string} */
+    private function documentLabels(\App\Models\Document $document, Printer $printer): array
+    {
+        $items = $document->lines()->where('check_action', PriceCheck::PRINT)->with('item')->get()->pluck('item');
+
+        return [$items->count(), $items->map(fn ($item) => $this->label($printer, $item))->implode("\n")];
+    }
+
+    private function markDocumentPrinted(\App\Models\Document $document): void
+    {
+        $itemIds = $document->lines()->where('check_action', PriceCheck::PRINT)->pluck('item_id');
+        PriceCheck::queued()->whereIn('item_id', $itemIds)->update(['printed_at' => now()]);
         $document->update(['printed_at' => now()]);
-
-        return $items->count();
     }
 
     /** After the queue was printed or marked printed: documents with no tag left waiting count as printed. */

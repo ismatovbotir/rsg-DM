@@ -6,69 +6,48 @@ use App\Livewire\AdminPage;
 use Livewire\Attributes\Locked;
 
 /**
- * Create / edit form of one model, rendered from a field list.
- * Field: key => ['label' => .., 'type' => text|number|checkbox, 'rules' => .., 'attrs' => [html attributes], 'default' => ..].
+ * View-only card of one master-data record that comes from Adines (1C): header with status and actions,
+ * key figures, then a table of fields. Nothing here can be changed, data is corrected in Adines.
+ * Subclasses describe the model, the fields to show and optional key figures.
  */
 abstract class CrudForm extends AdminPage
 {
     #[Locked]
-    public ?int $recordId = null;
-
-    public array $data = [];
+    public int $recordId;
 
     /** @return class-string<\Illuminate\Database\Eloquent\Model> */
     abstract protected function model(): string;
 
-    abstract protected function titles(): array; // ['new' => .., 'edit' => ..]
-
-    abstract protected function fields(): array;
+    /** Name of the list ("Kontragentlar") for the breadcrumb. */
+    abstract protected function listTitle(): string;
 
     abstract protected function indexRoute(): string;
 
-    protected function messages(): array
+    /** @return list<array{0: string, 1: string|\Closure}> [label, attribute or closure($record)] */
+    abstract protected function fields(): array;
+
+    /** Key figures above the table: [[label, value], ...]. */
+    protected function figures($record): array
     {
         return [];
     }
 
-    protected function saved(): string
+    public function mount(int $record): void
     {
-        return 'Saqlandi.';
-    }
-
-    public function mount(?int $record = null): void
-    {
-        $model = $record ? $this->model()::findOrFail($record) : null;
-        $this->recordId = $model?->id;
-
-        foreach ($this->fields() as $key => $field) {
-            $isBool = $field['type'] === 'checkbox';
-            $default = $field['default'] ?? ($isBool ? true : '');
-            $this->data[$key] = $model ? ($model->{$key} ?? ($isBool ? false : '')) : $default;
-        }
-    }
-
-    public function save()
-    {
-        $fields = $this->fields();
-        $rules = collect($fields)->mapWithKeys(fn ($f, $key) => ["data.{$key}" => $f['rules']])->all();
-        $names = collect($fields)->mapWithKeys(fn ($f, $key) => ["data.{$key}" => $f['label']])->all();
-        $clean = $this->validate($rules, $this->messages(), $names)['data'];
-
-        $values = collect($clean)->map(fn ($v, $key) => $fields[$key]['type'] === 'checkbox' ? (bool) $v : (($v === '' || $v === null) ? null : $v))->all();
-
-        $this->recordId ? $this->model()::findOrFail($this->recordId)->update($values) : $this->model()::create($values);
-
-        session()->flash('status', $this->saved());
-
-        return $this->redirect(route($this->indexRoute()));
+        $this->recordId = $this->model()::findOrFail($record)->id;
     }
 
     public function render()
     {
-        return $this->page('livewire.admin.crud-form', [
-            'title' => $this->titles()[$this->recordId ? 'edit' : 'new'],
-            'fields' => $this->fields(),
+        $record = $this->model()::findOrFail($this->recordId);
+
+        return $this->page('livewire.admin.crud-card', [
+            'record' => $record,
+            'listTitle' => $this->listTitle(),
             'back' => route($this->indexRoute()),
+            'rows' => collect($this->fields())->map(fn ($f) => [$f[0], is_callable($f[1]) ? $f[1]($record) : $record->{$f[1]}]),
+            'figures' => $this->figures($record),
+            'hasStatus' => array_key_exists('is_active', $record->getAttributes()),
         ]);
     }
 }

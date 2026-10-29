@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Counterparty;
 use App\Models\Item;
 use App\Models\PriceType;
+use App\Models\Role;
 use App\Models\User;
 use App\Models\Warehouse;
 use Illuminate\Database\Seeder;
@@ -18,13 +19,18 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call(LabelTemplateSeeder::class);
+        $this->call(CheckerThemeSeeder::class);
 
-        User::updateOrCreate(['email' => 'admin@rsg.uz'], [
-            'name' => 'Admin', 'password' => Hash::make('tsd-admin-2026'), 'role' => 'admin',
-        ]);
-        User::updateOrCreate(['email' => 'pda@rsg.uz'], [
-            'name' => 'PDA user', 'password' => Hash::make('tsd-pda-2026'), 'role' => 'user',
-        ]);
+        // roles come from the migration (Administrator, PDA operator, Operator); dev PINs: change before production
+        $roles = ['admin' => Role::where('is_admin', true)->value('id'), 'user' => Role::where('name', 'PDA operator')->value('id')];
+        foreach ([
+            ['admin@rsg.uz', 'Admin', 'tsd-admin-2026', 'admin', '4821'],
+            ['pda@rsg.uz', 'PDA user', 'tsd-pda-2026', 'user', '7305'],
+        ] as [$email, $name, $password, $role, $pin]) {
+            $user = User::updateOrCreate(['email' => $email], ['name' => $name, 'password' => Hash::make($password), 'role' => $role, 'role_id' => $roles[$role]]);
+            $user->pin || $user->issuePin($pin);
+            $user->ensureBadge();
+        }
 
         foreach ([['code' => 'MAIN', 'name' => 'Asosiy ombor'], ['code' => 'SHOP', 'name' => 'Do‘kon']] as $w) {
             Warehouse::updateOrCreate(['code' => $w['code']], $w);

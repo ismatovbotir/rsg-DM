@@ -18,20 +18,6 @@ class Index extends AdminPage
         $this->resetPage();
     }
 
-    public function delete(int $id): void
-    {
-        $item = Item::findOrFail($id);
-
-        if (DocumentLine::where('item_id', $item->id)->exists()) {
-            $this->fail('Tovar hujjatlarda ishlatilgan, o‘chirib bo‘lmaydi. Uni nofaol qiling.');
-
-            return;
-        }
-
-        $item->delete();
-        $this->ok('Tovar o‘chirildi.');
-    }
-
     public function render()
     {
         return $this->page('livewire.admin.items.index', [

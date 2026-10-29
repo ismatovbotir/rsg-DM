@@ -11,6 +11,6 @@ class ExampleTest extends TestCase
 
     public function test_the_application_requires_login(): void
     {
-        $this->get('/')->assertOk()->assertSee('type="password"', false)->assertDontSee('Bosh menyu');
+        $this->get('/')->assertOk()->assertSee('Badge QR kodni skanerlang')->assertDontSee('Bosh menyu');
     }
 }

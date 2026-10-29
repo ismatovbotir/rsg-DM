@@ -46,6 +46,7 @@ class Index extends AdminPage
             ->when($this->status !== '', fn ($q) => $q->where('status', $this->status))
             ->when($this->sync !== '', fn ($q) => $q->where('onec_status', $this->sync))
             ->when($this->type !== '', fn ($q) => $q->where('type', $this->type))
+            ->when(auth()->user()->adminDocumentTypes() !== null, fn ($q) => $q->whereIn('type', auth()->user()->adminDocumentTypes()))
             ->latest()
             ->simplePaginate(30);
 

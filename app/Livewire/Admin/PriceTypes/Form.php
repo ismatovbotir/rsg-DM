@@ -3,9 +3,10 @@
 namespace App\Livewire\Admin\PriceTypes;
 
 use App\Livewire\Admin\CrudForm;
+use App\Models\ItemPrice;
 use App\Models\PriceType;
-use Illuminate\Validation\Rule;
 
+/** Price type card (view only, data comes from Adines). */
 class Form extends CrudForm
 {
     protected function model(): string
@@ -13,9 +14,9 @@ class Form extends CrudForm
         return PriceType::class;
     }
 
-    protected function titles(): array
+    protected function listTitle(): string
     {
-        return ['new' => 'Yangi narx turi', 'edit' => 'Narx turini tahrirlash'];
+        return 'Narx turlari';
     }
 
     protected function indexRoute(): string
@@ -23,17 +24,13 @@ class Form extends CrudForm
         return 'admin.pricetypes.index';
     }
 
-    protected function saved(): string
-    {
-        return 'Narx turi saqlandi.';
-    }
-
     protected function fields(): array
     {
-        return [
-            'name' => ['label' => 'Nomi', 'type' => 'text', 'rules' => 'required|string|max:255', 'attrs' => ['required' => 'required']],
-            'code' => ['label' => 'Kod (Adines)', 'type' => 'text', 'rules' => ['nullable', 'string', 'max:50', Rule::unique('price_types', 'code')->ignore($this->recordId)]],
-            'is_active' => ['label' => 'Faol', 'type' => 'checkbox', 'rules' => 'boolean'],
-        ];
+        return [['Nomi', 'name'], ['Kod (Adines)', 'code']];
+    }
+
+    protected function figures($record): array
+    {
+        return [['Kod', $record->code ?: '—'], ['Narxlar soni', ItemPrice::where('price_type_id', $record->id)->count()]];
     }
 }

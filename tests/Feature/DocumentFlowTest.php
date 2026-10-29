@@ -71,7 +71,7 @@ class DocumentFlowTest extends TestCase
 
     public function test_guest_is_redirected_to_login(): void
     {
-        $this->get('/')->assertOk()->assertSee('type="password"', false)->assertDontSee('Bosh menyu');
+        $this->get('/')->assertOk()->assertSee('Badge QR kodni skanerlang')->assertDontSee('Bosh menyu');
         $this->get('/admin/documents')->assertRedirect('/login');
     }
 
@@ -337,10 +337,11 @@ class DocumentFlowTest extends TestCase
         }
 
         // the directory: scan or type, and the browse page for it links back to the lookup with the picked item
-        Livewire::actingAs($user)->test(Directory::class)->set('q', 'SUT-1L')->call('search')->assertSee('Sut')->assertSee('0001');
+        Livewire::actingAs($user)->test(Directory::class)->set('q', 'Sut')->call('search')->assertSee('Sut')->assertSee('0001'); // a name lists matches
+        Livewire::actingAs($user)->test(Directory::class)->set('q', '0001')->call('search')->assertRedirect(route('item', Item::first()->id)); // a scan opens the card
         Livewire::actingAs($user)->test(Directory::class)->set('q', 'zzz')->call('search')->assertSee('Topilmadi');
         $item = Item::first();
-        Livewire::actingAs($user)->test(Browse::class)->set('q', 'SUT-1L')->assertSee('Sut')->call('pick', $item->id)->assertRedirect(route('directory', ['q' => '0001']));
+        Livewire::actingAs($user)->test(Browse::class)->set('q', 'SUT-1L')->assertSee('Sut')->call('pick', $item->id)->assertRedirect(route('item', $item->id));
     }
 
     public function test_price_check_document_confirm_and_print_queue(): void
@@ -457,9 +458,9 @@ class DocumentFlowTest extends TestCase
 
         $this->actingAs($admin)->get('/admin/documents')->assertOk();
         $this->actingAs($admin)->get('/admin/items')->assertOk();
-        Livewire::actingAs($admin)->test(\App\Livewire\Admin\Items\Form::class)
-            ->set('code', 'A1')->set('article', 'ART-A1')->set('name', 'Test')->set('unit', 'dona')->set('price', '5')
-            ->call('save')->assertRedirect('/admin/items');
-        $this->assertDatabaseHas('items', ['code' => 'A1', 'article' => 'ART-A1']);
+        // item data comes from Adines: no create route, the card only shows it
+        $this->actingAs($admin)->get('/admin/items/create')->assertNotFound();
+        $item = \App\Models\Item::create(['code' => 'A1', 'article' => 'ART-A1', 'name' => 'Test', 'unit' => 'dona', 'price' => 5, 'is_active' => true]);
+        $this->actingAs($admin)->get("/admin/items/{$item->id}/edit")->assertOk()->assertSee('ART-A1')->assertDontSee('name="name"', false);
     }
 }

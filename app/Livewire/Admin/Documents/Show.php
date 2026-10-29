@@ -16,7 +16,10 @@ class Show extends AdminPage
 
     public function mount(int $record): void
     {
-        $this->recordId = Document::findOrFail($record)->id;
+        $document = Document::findOrFail($record);
+        $types = auth()->user()->adminDocumentTypes();
+        abort_unless($types === null || in_array($document->type, $types, true), 403);
+        $this->recordId = $document->id;
     }
 
     /** Print the tags of a price check on the price-tag printer. */

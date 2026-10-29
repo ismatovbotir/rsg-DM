@@ -24,6 +24,6 @@ class Index extends CrudIndex
 
     protected function routes(): array
     {
-        return ['create' => 'admin.warehouses.create', 'edit' => 'admin.warehouses.edit', 'newLabel' => '+ Yangi ombor', 'empty' => 'Omborlar yo‘q.'];
+        return ['edit' => 'admin.warehouses.edit', 'empty' => 'Omborlar yo‘q.'];
     }
 }

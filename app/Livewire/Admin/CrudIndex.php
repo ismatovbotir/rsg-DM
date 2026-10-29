@@ -23,7 +23,7 @@ abstract class CrudIndex extends AdminPage
     /** [[label, attribute-or-closure, 'num'?], ...] */
     abstract protected function columns(): array;
 
-    /** ['create' => route name, 'edit' => route name, 'newLabel' => '+ Yangi ...', 'empty' => 'Yo‘q.'] */
+    /** ['edit' => route name of the view-only card, 'empty' => 'Yo‘q.'] (no "new" button: the data comes from Adines) */
     abstract protected function routes(): array;
 
     protected function searchable(): ?string

@@ -23,7 +23,7 @@ class DevLoginController extends Controller
         Auth::login($user, true);
         $request->session()->regenerate();
 
-        return redirect($user->isAdmin() ? route('admin.documents.index') : route('menu'))
+        return redirect($user->homeUrl())
             ->withCookie(Cookie::forget('dev_noauto'));
     }
 }

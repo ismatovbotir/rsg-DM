@@ -8,7 +8,6 @@
             <button type="button" :class="{ on: tab === 'main' }" @click="tab = 'main'">Asosiy</button>
             @if ($checker)
                 <button type="button" :class="{ on: tab === 'qr' }" @click="tab = 'qr'">Token va QR</button>
-                <button type="button" :class="{ on: tab === 'design' }" @click="tab = 'design'">Ekran dizayni</button>
             @endif
         </div>
 
@@ -19,6 +18,13 @@
                     <option value="">— asosiy narx —</option>
                     @foreach ($priceTypes as $pt)<option value="{{ $pt->id }}">{{ $pt->name }}</option>@endforeach
                 </select>
+            </label>
+            <label>Ekran dizayni
+                <select wire:model="theme_id">
+                    <option value="">— asosiy dizayn —</option>
+                    @foreach ($themes as $theme)<option value="{{ $theme->id }}">{{ $theme->name }}{{ $theme->is_default ? ' (asosiy)' : '' }}</option>@endforeach
+                </select>
+                <span class="hint">Dizaynlarni <a class="lnk" href="{{ route('admin.themes.index') }}">Dizaynlar → Narx tekshirgich dizaynlari</a> bo‘limida yaratasiz.</span>
             </label>
             <div class="full"><label class="chk"><input type="checkbox" wire:model="is_active"> Faol</label></div>
             @unless ($checker)<p class="hint">Saqlaganingizda token yaratiladi va QR kod ko‘rsatiladi.</p>@endunless
@@ -49,10 +55,6 @@
                         </p>
                     </div>
                 </div>
-            </div>
-
-            <div class="tabpanel on" x-show="tab === 'design'" x-cloak>
-                <div class="full"><livewire:admin.checkers.designer :checker-id="$checker->id" :key="'designer-'.$checker->id" /></div>
             </div>
         @endif
     </div>

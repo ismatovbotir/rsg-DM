@@ -41,7 +41,7 @@ class Entry extends PdaPage
         $this->recordId = $document->id;
         $this->itemId = $itemModel->id;
         $this->qty = (string) (max((float) request()->query('qty', 1), 0.001) + 0);
-        $this->price = (string) ($itemModel->priceFor($document->price_type_id) + 0);
+        $this->price = (string) ($itemModel->priceFor($document->effectivePriceTypeId()) + 0);
     }
 
     public function save()
@@ -72,13 +72,44 @@ class Entry extends PdaPage
             ->first() ?? new DocumentLine(['document_id' => $document->id, 'item_id' => $item->id, 'qty' => 0]);
 
         $line->qty = $document->canEditQty() ? $line->qty + $data['qty'] : 1;
-        $line->price = $data['price'] ?? ($line->exists ? $line->price : $item->priceFor($document->price_type_id));
+        $line->price = $data['price'] ?? ($line->exists ? $line->price : $item->priceFor($document->effectivePriceTypeId()));
         $line->production_date = $date;
         // Expiry follows from the shelf life (days) that Adines sends for the item.
         $line->expiry_date = $date && $item->shelf_life_days !== null ? \Carbon\Carbon::parse($date)->addDays($item->shelf_life_days) : null;
         $line->save();
 
         session()->flash('status', "{$item->name}: ".($line->qty + 0));
+
+        return $this->redirect(route('docs.show', $document->id));
+    }
+
+    /** Price check, one tap: the shelf tag shows the system price ("OK") or not ("Wrong": a new tag is queued for the end of the check). */
+    public function verdict(string $result)
+    {
+        abort_unless(in_array($result, ['ok', 'wrong'], true), 422);
+
+        $document = Document::findOrFail($this->recordId);
+        $item = Item::findOrFail($this->itemId);
+        $this->authorizeEntry($document, $item);
+        abort_unless($document->isPriceCheck(), 404);
+
+        $system = (float) $item->priceFor($document->effectivePriceTypeId());
+        $typed = trim($this->shelf_price);
+        $ok = $result === 'ok';
+
+        if (! $ok && $typed !== '' && ! is_numeric($typed)) {
+            $this->addError('shelf_price', 'Narx raqam bo‘lishi kerak.');
+
+            return;
+        }
+
+        $document->lines()->updateOrCreate(['item_id' => $item->id], [
+            'qty' => 1, 'price' => $system,
+            'shelf_price' => $ok ? $system : ($typed !== '' ? $typed : null),
+            'check_action' => $ok ? PriceCheck::CONFIRMED : PriceCheck::PRINT,
+        ]);
+
+        session()->flash('status', $ok ? "{$item->name}: narx to‘g‘ri" : "{$item->name}: yorliq navbatga qo‘shildi");
 
         return $this->redirect(route('docs.show', $document->id));
     }
@@ -94,7 +125,7 @@ class Entry extends PdaPage
             ['required' => 'Javondagi narxni kiriting.', 'numeric' => 'Narx raqam bo‘lishi kerak.', 'min' => 'Narx noto‘g‘ri.']
         )['shelf_price'];
 
-        $system = (float) $item->priceFor($document->price_type_id);
+        $system = (float) $item->priceFor($document->effectivePriceTypeId());
         $matches = abs((float) $shelf - $system) < 0.005;
 
         $document->lines()->updateOrCreate(['item_id' => $item->id], [
@@ -120,9 +151,11 @@ class Entry extends PdaPage
         return $this->page('livewire.pda.docs.entry', [
             'doc' => $document,
             'item' => $item,
-            'priceSystem' => $item->priceFor($document->price_type_id) + 0,
+            'priceSystem' => $item->priceFor($document->effectivePriceTypeId()) + 0,
             'lines' => $document->lines()->where('item_id', $item->id)->orderBy('production_date')->get(),
-            'stocks' => $item->stocks()->join('warehouses', 'warehouses.id', '=', 'item_stocks.warehouse_id')->orderBy('warehouses.name')->get(['warehouses.name', 'item_stocks.qty']),
+            'stocks' => $item->stocks()->join('warehouses', 'warehouses.id', '=', 'item_stocks.warehouse_id')
+                ->when(auth()->user()->accessibleWarehouseIds(), fn ($q, $ids) => $q->whereIn('item_stocks.warehouse_id', $ids)) // only the warehouses the user has access to
+                ->orderBy('warehouses.name')->get(['warehouses.name', 'item_stocks.qty']),
             'expiry' => $expiry,
         ]);
     }

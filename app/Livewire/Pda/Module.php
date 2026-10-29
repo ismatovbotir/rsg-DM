@@ -16,7 +16,8 @@ class Module extends PdaPage
         $item = collect(config('menu.items'))->merge(config('menu.side'))->firstWhere('key', $key);
 
         abort_if($item === null, 404);
-        abort_unless(auth()->user()->canAccess($key), 403, 'Bu bo‘limga ruxsat yo‘q.');
+        $side = collect(config('menu.side'))->contains('key', $key);
+        abort_unless($side || auth()->user()->canAccess($key), 403, 'Bu bo‘limga ruxsat yo‘q.');
 
         if (! empty($item['doc'])) {
             return $this->redirect(route('docs.index', $key));

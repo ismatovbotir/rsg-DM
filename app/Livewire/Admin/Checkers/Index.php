@@ -21,6 +21,6 @@ class Index extends AdminPage
 
     public function render()
     {
-        return $this->page('livewire.admin.checkers.index', ['checkers' => PriceChecker::with('priceType')->orderBy('name')->get()]);
+        return $this->page('livewire.admin.checkers.index', ['checkers' => PriceChecker::with('priceType', 'theme')->orderBy('name')->get()]);
     }
 }

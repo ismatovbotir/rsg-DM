@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Support\Permissions;
 use Livewire\Component;
 
 /**
@@ -16,7 +17,8 @@ abstract class AdminPage extends Component
 
     public function boot(): void
     {
-        abort_unless(auth()->user()?->isAdmin(), 403);
+        // the page's section must be allowed by the user's role (null = full administrators only); runs on every Livewire request
+        abort_unless(auth()->user()?->canAdmin(Permissions::forComponent(static::class)), 403);
     }
 
     protected function page(string $view, array $data = [])

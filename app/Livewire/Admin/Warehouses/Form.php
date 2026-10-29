@@ -3,9 +3,10 @@
 namespace App\Livewire\Admin\Warehouses;
 
 use App\Livewire\Admin\CrudForm;
+use App\Models\ItemStock;
 use App\Models\Warehouse;
-use Illuminate\Validation\Rule;
 
+/** Warehouse / shop card (view only, data comes from Adines). */
 class Form extends CrudForm
 {
     protected function model(): string
@@ -13,9 +14,9 @@ class Form extends CrudForm
         return Warehouse::class;
     }
 
-    protected function titles(): array
+    protected function listTitle(): string
     {
-        return ['new' => 'Yangi ombor', 'edit' => 'Omborni tahrirlash'];
+        return 'Omborlar';
     }
 
     protected function indexRoute(): string
@@ -23,17 +24,22 @@ class Form extends CrudForm
         return 'admin.warehouses.index';
     }
 
-    protected function saved(): string
-    {
-        return 'Ombor saqlandi.';
-    }
-
     protected function fields(): array
     {
         return [
-            'name' => ['label' => 'Nomi', 'type' => 'text', 'rules' => 'required|string|max:255', 'attrs' => ['required' => 'required']],
-            'code' => ['label' => 'Kod (Adines)', 'type' => 'text', 'rules' => ['nullable', 'string', 'max:50', Rule::unique('warehouses', 'code')->ignore($this->recordId)]],
-            'is_active' => ['label' => 'Faol', 'type' => 'checkbox', 'rules' => 'boolean'],
+            ['Nomi', 'name'],
+            ['Kod (Adines)', 'code'],
+            ['Narx turi', fn ($w) => $w->priceType?->name],
+        ];
+    }
+
+    protected function figures($record): array
+    {
+        return [
+            ['Kod', $record->code ?: '—'],
+            ['Narx turi', $record->priceType?->name ?? '—'],
+            ['Qoldiq qatorlari', ItemStock::where('warehouse_id', $record->id)->count()],
+            ['Hujjatlar', \App\Models\Document::where('warehouse_id', $record->id)->count()],
         ];
     }
 }

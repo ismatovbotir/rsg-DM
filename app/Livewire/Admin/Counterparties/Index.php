@@ -24,7 +24,7 @@ class Index extends CrudIndex
 
     protected function routes(): array
     {
-        return ['create' => 'admin.counterparties.create', 'edit' => 'admin.counterparties.edit', 'newLabel' => '+ Yangi kontragent', 'empty' => 'Kontragentlar yo‘q.'];
+        return ['edit' => 'admin.counterparties.edit', 'empty' => 'Kontragentlar yo‘q.'];
     }
 
     protected function searchable(): ?string

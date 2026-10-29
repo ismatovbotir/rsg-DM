@@ -3,12 +3,29 @@
 namespace App\Http\Controllers;
 
 use App\Http\Middleware\DevAutoLogin;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-/** Sign out. Signing in is the Livewire component App\Livewire\Pda\Login. */
+/** Sign out, and sign in by the badge QR URL. The login form itself is the Livewire component App\Livewire\Pda\Login. */
 class LoginController extends Controller
 {
+    /** The badge QR code holds /login/badge/{token}: opening it (camera) signs that user in. */
+    public function badge(Request $request, string $token)
+    {
+        $user = User::byBadge($token);
+
+        if (! $user) {
+            return redirect()->route('login')->with('badge_error', 'Badge tanilmadi yoki eskirgan.');
+        }
+
+        Auth::login($user, true);
+        $request->session()->regenerate();
+        $user->forceFill(['last_login_at' => now()])->save();
+
+        return $user->pda_user ? redirect($user->homeUrl()) : redirect()->intended($user->homeUrl());
+    }
+
     public function logout(Request $request)
     {
         Auth::logout();

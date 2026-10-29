@@ -4,7 +4,7 @@
     @include('partials.lw-flash')
 
     <div class="bar">
-        <span>Tarmoq (ethernet / LAN) printerlari. Narx yorliqlarini bitta printer chop etadi; PDA ga alohida printer biriktirish mumkin.</span>
+        <span>LAN va Bluetooth printerlar. Narx yorliqlarini bitta printer chop etadi; PDA ga alohida printer biriktirish mumkin.</span>
         <span class="grow"></span>
         <a class="btn" href="{{ route('admin.printers.create') }}">+ Yangi printer</a>
     </div>
@@ -14,16 +14,15 @@
         <tbody>
             @forelse ($printers as $printer)
                 <tr wire:key="printer-{{ $printer->id }}">
-                    <td>{{ $printer->name }}</td>
+                    <td><a class="lnk" href="{{ route('admin.printers.edit', $printer) }}">{{ $printer->name }}</a></td>
                     <td>{{ $printer->address }}</td>
                     <td>{{ $printer->label_width_mm }} × {{ $printer->label_height_mm }} mm</td>
                     <td>@if ($printer->is_price_tag)<span class="badge completed">Asosiy</span>@endif</td>
                     <td class="num">{{ $deviceCounts[$printer->id] ?? 0 }}</td>
                     <td><span class="badge {{ $printer->is_active ? 'completed' : 'error' }}">{{ $printer->is_active ? 'Faol' : 'Nofaol' }}</span></td>
                     <td class="text-right">
-                        <button class="btn gray" wire:click="test({{ $printer->id }})" wire:loading.attr="disabled">Sinov</button>
-                        <a class="btn gray" href="{{ route('admin.printers.edit', $printer) }}">Tahrirlash</a>
-                        <button class="btn red" wire:click="delete({{ $printer->id }})" wire:confirm="Printer o‘chirilsinmi?">O‘chirish</button>
+                        @unless ($printer->isBluetooth())<button class="btn sm gray" wire:click="test({{ $printer->id }})" wire:loading.attr="disabled">Sinov</button>@endunless
+                        <button class="btn sm red" wire:click="delete({{ $printer->id }})" wire:confirm="Printer o‘chirilsinmi?">O‘chirish</button>
                     </td>
                 </tr>
             @empty
