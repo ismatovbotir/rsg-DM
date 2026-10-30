@@ -5,7 +5,7 @@
         <div class="placeholder">
             <div class="icon"><svg class="ico"><use href="#i-{{ $item['icon'] ?? 'directories' }}"/></svg></div>
             <h2>{{ $item['title'] ?? '' }}</h2>
-            <p>Bu ekran hali tayyor emas.</p>
+            <p>{{ __('Bu ekran hali tayyor emas.') }}</p>
         </div>
     </x-pda.page>
 </div>

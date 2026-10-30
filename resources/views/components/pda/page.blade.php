@@ -8,7 +8,7 @@
     @isset($header)
         {{ $header }}
     @else
-        @if ($back)<a class="hbtn" href="{{ $back }}" aria-label="Orqaga">←</a>@endif
+        @if ($back)<a class="hbtn" href="{{ $back }}" aria-label="{{ __('Orqaga') }}">←</a>@endif
         <span class="title">{{ $title }}@if ($subtitle)<small class="block text-xs font-normal opacity-80">{{ $subtitle }}</small>@endif</span>
     @endisset
 </header>
@@ -29,10 +29,10 @@
                 <form method="POST" action="{{ route('logout') }}" class="flex w-full items-center gap-2.5">
                     @csrf
                     <span class="sub !m-0 flex-1">{{ auth()->user()->name }}@isset($device) · {{ $device->name ?: 'qurilma' }}@endisset</span>
-                    <button class="btn gray !w-auto !min-w-0">Chiqish</button>
+                    <button class="btn gray !w-auto !min-w-0">{{ __('Chiqish') }}</button>
                 </form>
             @else
-                <a class="btn gray" href="{{ route('menu') }}">Bosh menyu</a>
+                <a class="btn gray" href="{{ route('menu') }}">{{ __('Bosh menyu') }}</a>
             @endif
         @else
             <span class="sub">{{ config('menu.app_name') }}</span>

@@ -4,9 +4,9 @@
     @include('partials.lw-flash')
 
     <div class="tabs">
-        <button type="button" :class="{ on: tab === 'design' }" @click="tab = 'design'">Dizayn</button>
-        <button type="button" :class="{ on: tab === 'zpl' }" @click="tab = 'zpl'; window.dzPush && window.dzPush(); $wire.$refresh()">ZPL kodi</button>
-        <button type="button" :class="{ on: tab === 'test' }" @click="tab = 'test'">Sinov chop etish</button>
+        <button type="button" :class="{ on: tab === 'design' }" @click="tab = 'design'">{{ __('Dizayn') }}</button>
+        <button type="button" :class="{ on: tab === 'zpl' }" @click="tab = 'zpl'; window.dzPush && window.dzPush(); $wire.$refresh()">{{ __('ZPL kodi') }}</button>
+        <button type="button" :class="{ on: tab === 'test' }" @click="tab = 'test'">{{ __('Sinov chop etish') }}</button>
     </div>
 
     {{-- The canvas editor is plain client-side JS; Livewire must not re-render it (wire:ignore). Saving / ZPL / test print go through Livewire. --}}
@@ -15,48 +15,48 @@
             <script type="application/json" id="dz-samples">@json($sampleData)</script>
             <div>
                 <div class="mb-3 flex flex-wrap gap-1.5 [&_.btn]:px-2.5 [&_.btn]:py-1.5 [&_.btn]:text-[13px]">
-                    <button type="button" class="btn gray" data-add="name">+ Nomi</button>
-                    <button type="button" class="btn gray" data-add="price">+ Narx</button>
-                    <button type="button" class="btn gray" data-add="barcode">+ Shtrix-kod</button>
-                    <button type="button" class="btn gray" data-add="qr">+ QR</button>
-                    <button type="button" class="btn gray" data-add="code">+ Kod</button>
-                    <button type="button" class="btn gray" data-add="article">+ Artikul</button>
-                    <button type="button" class="btn gray" data-add="unit">+ Birlik</button>
-                    <button type="button" class="btn gray" data-add="static">+ Matn</button>
-                    <button type="button" class="btn gray" data-add="line">+ Chiziq</button>
-                    <button type="button" class="btn gray" data-add="box">+ Ramka</button>
+                    <button type="button" class="btn gray" data-add="name">{{ __('+ Nomi') }}</button>
+                    <button type="button" class="btn gray" data-add="price">{{ __('+ Narx') }}</button>
+                    <button type="button" class="btn gray" data-add="barcode">{{ __('+ Shtrix-kod') }}</button>
+                    <button type="button" class="btn gray" data-add="qr">{{ __('+ QR') }}</button>
+                    <button type="button" class="btn gray" data-add="code">{{ __('+ Kod') }}</button>
+                    <button type="button" class="btn gray" data-add="article">{{ __('+ Artikul') }}</button>
+                    <button type="button" class="btn gray" data-add="unit">{{ __('+ Birlik') }}</button>
+                    <button type="button" class="btn gray" data-add="static">{{ __('+ Matn') }}</button>
+                    <button type="button" class="btn gray" data-add="line">{{ __('+ Chiziq') }}</button>
+                    <button type="button" class="btn gray" data-add="box">{{ __('+ Ramka') }}</button>
                 </div>
                 <div class="bar !mb-2.5">
-                    <label class="text-xs text-ink-muted">Namuna tovar
+                    <label class="text-xs text-ink-muted">{{ __('Namuna tovar') }}
                         <select id="sample" class="mt-0.5 block">@foreach ($sampleData as $i => $s)<option value="{{ $i }}">{{ $s['name'] }}</option>@endforeach</select>
                     </label>
-                    <label class="text-xs text-ink-muted">Masshtab
-                        <select id="zoom" class="mt-0.5 block"><option value="5">5 px/mm</option><option value="8" selected>8 px/mm</option><option value="12">12 px/mm</option><option value="16">16 px/mm</option></select>
+                    <label class="text-xs text-ink-muted">{{ __('Masshtab') }}
+                        <select id="zoom" class="mt-0.5 block"><option value="5">{{ __('5 px/mm') }}</option><option value="8" selected>{{ __('8 px/mm') }}</option><option value="12">{{ __('12 px/mm') }}</option><option value="16">{{ __('16 px/mm') }}</option></select>
                     </label>
-                    <label class="m-0 flex items-center gap-1.5 text-[13px]"><input type="checkbox" id="preview"> Chop etish ko‘rinishi (yorliq burilishi bilan)</label>
+                    <label class="m-0 flex items-center gap-1.5 text-[13px]"><input type="checkbox" id="preview"> {{ __('Chop etish ko‘rinishi (yorliq burilishi bilan)') }}</label>
                 </div>
                 <div id="stage" class="min-h-[260px] overflow-auto rounded-lg bg-[#dfe5ee] p-6"><div id="frame" class="relative mx-auto"><div id="sheet" tabindex="0"></div></div></div>
-                <p class="hint">Sudrab joylashtiring · burchakdagi kvadrat — o‘lcham · strelkalar 0,5 mm ga suradi (Shift — 2 mm) · Delete — o‘chirish. Shtrix-kod va QR ko‘rinishi taxminiy, printerda haqiqiysi chiqadi.</p>
+                <p class="hint">{{ __('Sudrab joylashtiring · burchakdagi kvadrat — o‘lcham · strelkalar 0,5 mm ga suradi (Shift — 2 mm) · Delete — o‘chirish. Shtrix-kod va QR ko‘rinishi taxminiy, printerda haqiqiysi chiqadi.') }}</p>
             </div>
 
             <div>
                 <div class="panel">
-                    <h3>Yorliq</h3>
-                    <label>Nomi <input id="dz-name" value="{{ $name }}" required></label>
+                    <h3>{{ __('Yorliq') }}</h3>
+                    <label>{{ __('Nomi') }} <input id="dz-name" value="{{ $name }}" required></label>
                     <div class="grid grid-cols-2 gap-x-2.5">
-                        <label>Kengligi, mm <input id="W" type="number" step="0.5" min="15" max="200" value="{{ $width_mm }}" required></label>
-                        <label>Balandligi, mm <input id="H" type="number" step="0.5" min="10" max="300" value="{{ $height_mm }}" required></label>
+                        <label>{{ __('Kengligi, mm') }} <input id="W" type="number" step="0.5" min="15" max="200" value="{{ $width_mm }}" required></label>
+                        <label>{{ __('Balandligi, mm') }} <input id="H" type="number" step="0.5" min="10" max="300" value="{{ $height_mm }}" required></label>
                     </div>
                     <div class="grid grid-cols-2 gap-x-2.5">
-                        <label>Yorliq burilishi
+                        <label>{{ __('Yorliq burilishi') }}
                             <select id="R">@foreach ([0, 90, 180, 270] as $r)<option value="{{ $r }}" @selected((int) $rotation === $r)>{{ $r }}°</option>@endforeach</select>
                         </label>
-                        <label>Printer dpi
+                        <label>{{ __('Printer dpi') }}
                             <select id="dz-dpi">@foreach ([203, 300, 600] as $d)<option value="{{ $d }}" @selected((int) $dpi === $d)>{{ $d }}</option>@endforeach</select>
                         </label>
                     </div>
-                    <label>Shrift (ZPL) <input id="dz-font" value="{{ $font }}" required></label>
-                    <span class="hint">«0» — printerning ichki shrifti. Kirill / o‘zbek harflari chiqmasa, printerga yuklangan shrift faylini yozing: E:ARIAL.TTF</span>
+                    <label>{{ __('Shrift (ZPL)') }} <input id="dz-font" value="{{ $font }}" required></label>
+                    <span class="hint">{{ __('«0» — printerning ichki shrifti. Kirill / o‘zbek harflari chiqmasa, printerga yuklangan shrift faylini yozing: E:ARIAL.TTF') }}</span>
                 </div>
 
                 <div class="panel" id="props"></div>
@@ -64,41 +64,41 @@
         </div>
 
         <div class="actions">
-            <button type="button" class="btn" id="dz-save">Saqlash</button>
-            <a class="btn gray" href="{{ route('admin.labels.index') }}">Ro‘yxat</a>
+            <button type="button" class="btn" id="dz-save">{{ __('Saqlash') }}</button>
+            <a class="btn gray" href="{{ route('admin.labels.index') }}">{{ __('Ro‘yxat') }}</a>
         </div>
     </div>
 
     <div x-show="tab === 'zpl'" x-cloak>
         @if ($zpl)
-            <p class="hint">Hozirgi dizayn va birinchi namuna tovar uchun hosil bo‘lgan ZPL (saqlamasdan ham ko‘rinadi).</p>
+            <p class="hint">{{ __('Hozirgi dizayn va birinchi namuna tovar uchun hosil bo‘lgan ZPL (saqlamasdan ham ko‘rinadi).') }}</p>
             <pre class="overflow-auto whitespace-pre-wrap break-all rounded-lg bg-[#101828] p-3.5 text-[#d7e3f4]">{{ $zpl }}</pre>
         @else
-            <p>Dizaynni ko‘rish uchun elementlar qo‘shing.</p>
+            <p>{{ __('Dizaynni ko‘rish uchun elementlar qo‘shing.') }}</p>
         @endif
     </div>
 
     <div x-show="tab === 'test'" x-cloak>
         @if ($recordId)
             <form class="panel max-w-[480px]" wire:submit="test">
-                <p class="hint">Saqlangan dizaynni tanlangan printerga tanlangan tovar bilan yuboradi.</p>
-                <label>Printer
+                <p class="hint">{{ __('Saqlangan dizaynni tanlangan printerga tanlangan tovar bilan yuboradi.') }}</p>
+                <label>{{ __('Printer') }}
                     <select wire:model="printer_id" required>
-                        <option value="">— tanlang —</option>
+                        <option value="">{{ __('— tanlang —') }}</option>
                         @foreach ($printers as $p)<option value="{{ $p->id }}">{{ $p->name }} ({{ $p->address }})</option>@endforeach
                     </select>
                 </label>
-                <label>Tovar
+                <label>{{ __('Tovar') }}
                     <select wire:model="item_id" required>
-                        <option value="">— tanlang —</option>
+                        <option value="">{{ __('— tanlang —') }}</option>
                         @foreach ($samples as $i)<option value="{{ $i->id }}">{{ $i->name }}</option>@endforeach
                     </select>
                 </label>
-                <button class="btn" @disabled($printers->isEmpty() || $samples->isEmpty())>Sinov yorlig‘ini chop etish</button>
-                @if ($printers->isEmpty())<span class="hint">Avval «Printerlar» bo‘limida printer qo‘shing.</span>@endif
+                <button class="btn" @disabled($printers->isEmpty() || $samples->isEmpty())>{{ __('Sinov yorlig‘ini chop etish') }}</button>
+                @if ($printers->isEmpty())<span class="hint">{{ __('Avval «Printerlar» bo‘limida printer qo‘shing.') }}</span>@endif
             </form>
         @else
-            <p>Avval dizaynni saqlang.</p>
+            <p>{{ __('Avval dizaynni saqlang.') }}</p>
         @endif
     </div>
 </div>

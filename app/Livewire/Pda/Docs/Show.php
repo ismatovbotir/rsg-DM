@@ -57,7 +57,7 @@ class Show extends PdaPage
         $resolved = Item::resolve($code);
 
         if (! $resolved) {
-            $this->fail("Tovar topilmadi: {$code}");
+            $this->fail(__('Tovar topilmadi: :code', ['code' => $code]));
 
             return;
         }
@@ -170,7 +170,7 @@ class Show extends PdaPage
             }
 
             $this->dispatch('bt-print', zpl: $zpl, printer: $printer->name, address: (string) $printer->bt_address);
-            $this->ok("{$count} ta yorliq Bluetooth printerga yuborilmoqda ({$printer->name}).");
+            $this->ok(__(':count ta yorliq Bluetooth printerga yuborilmoqda (:printer).', ['count' => $count, 'printer' => $printer->name]));
 
             return;
         }

@@ -27,7 +27,6 @@
     $chips = [];
     if ($d['show_code']) { $chips['code'] = '№ '; }
     if ($d['show_article']) { $chips['article'] = 'Art. '; }
-    if ($d['show_barcode']) { $chips['barcode'] = ''; }
     if ($d['show_group']) { $chips['group'] = ''; }
 @endphp
 <div style="position:relative;width:{{ $w }};height:{{ $h }};overflow:hidden;background:#000">
@@ -60,10 +59,15 @@
             </div>
 
             <div class="pcs-result" data-s="result">
-                @if ($d['show_image'])
-                    <div class="pcs-img" data-f-box="image" @if (empty($item['image']) && ! $preview) hidden @endif>
-                        <img data-f="image" src="{{ $item['image'] ?? '' }}" alt="" @if (empty($item['image'])) hidden @endif>
-                        @if ($preview)<span class="pcs-img-ph" @if (! empty($item['image'])) hidden @endif>Tovar rasmi</span>@endif
+                @if ($d['show_image'] || $d['show_barcode'])
+                    <div class="pcs-media">
+                        @if ($d['show_image'])
+                            <div class="pcs-img">
+                                <img data-f="image" src="{{ $item['image'] ?? '' }}" alt="" @if (empty($item['image'])) hidden @endif>
+                                <img class="pcs-img-ph" src="{{ $logo ?: asset('img/logo.png') }}" alt="" @if (! empty($item['image'])) hidden @endif>
+                            </div>
+                        @endif
+                        @if ($d['show_barcode'])<div class="pcs-barsbox" data-svg="barcode_svg">{!! $item['barcode_svg'] ?? '' !!}</div>@endif
                     </div>
                 @endif
                 <div class="pcs-info">
@@ -97,7 +101,7 @@
                     @foreach ($errors->all() as $error)<div class="pcs-auth-err">{{ $error }}</div>@endforeach
                     <form method="POST" action="{{ route('checker.activate') }}">
                         @csrf
-                        <input class="pcs-auth-input" name="code" autocomplete="off" autofocus placeholder="QR kod">
+                        <input class="pcs-auth-input" name="code" autocomplete="off" autofocus placeholder="{{ __('QR kod') }}">
                     </form>
                 @else
                     <svg class="pcs-qr" viewBox="0 0 21 21" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M0 0h7v7H0zM1 1v5h5V1zM2 2h3v3H2zM14 0h7v7h-7zM15 1v5h5V1zM16 2h3v3h-3zM0 14h7v7H0zM1 15v5h5v-5zM2 16h3v3H2zM8 0h1v1H8zM10 1h2v1h-2zM8 3h2v1H8zM11 3h1v2h-1zM9 5h2v1H9zM8 8h2v1H8zM11 8h3v1h-3zM15 8h1v2h-1zM18 8h3v1h-3zM0 8h2v1H0zM3 8h1v2H3zM5 9h3v1H5zM9 10h2v2H9zM12 10h1v1h-1zM17 10h2v1h-2zM0 11h1v2H0zM2 11h3v1H2zM6 12h2v1H6zM14 12h2v2h-2zM18 12h3v1h-3zM8 14h2v1H8zM11 14h2v1h-2zM17 14h1v2h-1zM20 14h1v3h-1zM9 16h1v2H9zM12 16h2v1h-2zM15 17h2v1h-2zM8 19h3v1H8zM12 19h1v2h-1zM14 19h3v1h-3zM18 18h1v3h-1z"/></svg>

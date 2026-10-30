@@ -5,11 +5,11 @@
 
     <div class="bar">
         <span class="grow"></span>
-        <a class="btn" href="{{ route('admin.users.create') }}">+ Yangi foydalanuvchi</a>
+        <a class="btn" href="{{ route('admin.users.create') }}">{{ __('+ Yangi foydalanuvchi') }}</a>
     </div>
 
     <table>
-        <thead><tr><th>Ism</th><th>Login (email)</th><th>Rol</th><th>Do‘kon</th><th>Holat</th><th>Oxirgi kirish</th></tr></thead>
+        <thead><tr><th>{{ __('Ism') }}</th><th>{{ __('Login (email)') }}</th><th>{{ __('Rol') }}</th><th>{{ __('Do‘kon') }}</th><th>{{ __('Holat') }}</th><th>{{ __('Oxirgi kirish') }}</th></tr></thead>
         <tbody>
             @foreach ($users as $user)
                 <tr wire:key="user-{{ $user->id }}">

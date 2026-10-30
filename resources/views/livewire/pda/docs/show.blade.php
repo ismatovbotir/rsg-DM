@@ -7,10 +7,10 @@
      @keydown.window.escape="drawer ? drawer = false : window.location = '{{ route('docs.index', $doc->type) }}'">
     <x-pda.page :notice="$notice" :failure="$failure">
         <x-slot:header>
-            <button class="hbtn" type="button" aria-label="Hujjat sarlavhasi" @click="drawer = true">☰</button>
-            <span class="title">{{ $doc->type_label }}<small class="block text-xs font-normal opacity-80">{{ $doc->number }} · 2/2 Tovarlar</small></span>
+            <button class="hbtn" type="button" aria-label="{{ __('Hujjat sarlavhasi') }}" @click="drawer = true">☰</button>
+            <span class="title">{{ $doc->type_label }}<small class="block text-xs font-normal opacity-80">{{ $doc->number }} {{ __('· 2/2 Tovarlar') }}</small></span>
             <span class="badge {{ $doc->status }}">{{ $doc->status_label }}</span>
-            <a class="hbtn" href="{{ route('docs.index', $doc->type) }}" aria-label="Yopish">✕</a>
+            <a class="hbtn" href="{{ route('docs.index', $doc->type) }}" aria-label="{{ __('Yopish') }}">✕</a>
         </x-slot:header>
 
         @if ($doc->isDraft())
@@ -32,8 +32,8 @@
             @php [$done, $all] = $progress; $pct = $all > 0 ? min(100, round($done / $all * 100)) : 0; @endphp
             <div class="pad !py-1.5">
                 <div class="flex items-center justify-between text-sm">
-                    <span>{{ $doc->scope === 'group' && $doc->group ? $doc->group->name : 'Butun do‘kon' }}: <strong>{{ $done }} / {{ $all }}</strong> tekshirildi</span>
-                    @if ($doc->isDraft() && $all > $done)<a class="lnk" href="{{ route('docs.browse', $doc->id) }}?remaining=1">Qolganlar ({{ $all - $done }})</a>@endif
+                    <span>{{ $doc->scope === 'group' && $doc->group ? $doc->group->name : 'Butun do‘kon' }}: <strong>{{ $done }} / {{ $all }}</strong> {{ __('tekshirildi') }}</span>
+                    @if ($doc->isDraft() && $all > $done)<a class="lnk" href="{{ route('docs.browse', $doc->id) }}?remaining=1">{{ __('Qolganlar (') }}{{ $all - $done }})</a>@endif
                 </div>
                 <div class="mt-1 h-2 overflow-hidden rounded-full bg-line"><div class="h-full rounded-full bg-brand" style="width:{{ $pct }}%"></div></div>
             </div>
@@ -45,38 +45,34 @@
                     <div>
                         {{ $line->item->name }}
                         <span class="sub">{{ $line->item->code }}@if ($line->item->article) · {{ $line->item->article }}@endif · {{ $line->item->unit }}</span>
-                        @if ($line->production_date)<span class="sub">Ishlab chiqarilgan: {{ $line->production_date->format('d.m.Y') }}@if ($line->expiry_date) · Yaroqlilik: {{ $line->expiry_date->format('d.m.Y') }}@endif</span>@endif
+                        @if ($line->production_date)<span class="sub">{{ __('Ishlab chiqarilgan:') }} {{ $line->production_date->format('d.m.Y') }}@if ($line->expiry_date) {{ __('· Yaroqlilik:') }} {{ $line->expiry_date->format('d.m.Y') }}@endif</span>@endif
                     </div>
 
                     @if ($doc->isPriceCheck())
-                        <div class="my-1 text-3xl font-bold">{{ number_format($line->price, 0, '.', ' ') }} <small class="sub !inline">so'm / {{ $line->item->unit }}</small></div>
-                        @if ($line->shelf_price !== null)<div class="sub">Javondagi narx: {{ number_format($line->shelf_price, 0, '.', ' ') }}</div>@endif
+                        <div class="my-1 text-3xl font-bold">{{ number_format($line->price, 0, '.', ' ') }} <small class="sub !inline">{{ __('so\'m /') }} {{ $line->item->unit }}</small></div>
+                        @if ($line->shelf_price !== null)<div class="sub">{{ __('Javondagi narx:') }} {{ number_format($line->shelf_price, 0, '.', ' ') }}</div>@endif
                         @if ($doc->isDraft())
                             <div class="lc">
                                 <div class="flex flex-1 gap-2">
-                                    <button type="button" class="btn {{ $line->check_action === 'print' ? 'gray' : 'green' }}" wire:click="setCheck({{ $line->id }}, 'confirmed')">✓ To‘g‘ri</button>
-                                    <button type="button" class="btn {{ $line->check_action === 'print' ? '' : 'gray' }}" wire:click="setCheck({{ $line->id }}, 'print')">Yorliq</button>
+                                    <button type="button" class="btn {{ $line->check_action === 'print' ? 'gray' : 'green' }}" wire:click="setCheck({{ $line->id }}, 'confirmed')">{{ __('✓ To‘g‘ri') }}</button>
+                                    <button type="button" class="btn {{ $line->check_action === 'print' ? '' : 'gray' }}" wire:click="setCheck({{ $line->id }}, 'print')">{{ __('Yorliq') }}</button>
                                 </div>
-                                <button type="button" class="x" aria-label="O'chirish" wire:click="removeLine({{ $line->id }})">✕</button>
+                                <button type="button" class="x" aria-label="{{ __('O\'chirish') }}" wire:click="removeLine({{ $line->id }})">✕</button>
                             </div>
                         @else
                             <span class="badge {{ $line->check_action === 'print' ? '' : 'completed' }}">{{ $line->check_action === 'print' ? 'Yorliq chop etishga' : 'Narx to‘g‘ri' }}</span>
                         @endif
                     @elseif ($doc->isDraft())
+                        {{-- qty and price are information here; the pencil opens the entry page to change them --}}
                         <div class="lc">
-                            <div class="flex flex-1 gap-2">
-                                @if ($doc->canEditQty())
-                                    <label class="mini">Miqdor
-                                        <input class="qty" type="number" step="any" min="0.001" value="{{ $line->qty + 0 }}" @kb wire:change="updateQty({{ $line->id }}, $event.target.value)">
-                                    </label>
-                                @endif
-                                @if ($doc->canEditPrice())
-                                    <label class="mini">Narx
-                                        <input class="qty" type="number" step="any" min="0" value="{{ $line->price + 0 }}" @kb wire:change="updatePrice({{ $line->id }}, $event.target.value)">
-                                    </label>
-                                @endif
-                            </div>
-                            <button type="button" class="x" aria-label="O‘chirish" wire:click="removeLine({{ $line->id }})">✕</button>
+                            <strong class="flex-1 text-lg">
+                                @if ($doc->canEditQty()){{ $line->qty + 0 }} {{ $line->item->unit }}@endif
+                                @if ($doc->canEditPrice()) × {{ number_format($line->price, 0, '.', ' ') }}@endif
+                            </strong>
+                            @if ($doc->canEditQty() || $doc->canEditPrice())
+                                <a class="btn gray !w-auto px-4" href="{{ route('docs.entry', [$doc->id, $line->item_id]) }}?line={{ $line->id }}" aria-label="{{ __('O‘zgartirish') }}">{{ __('✎ O‘zgartirish') }}</a>
+                            @endif
+                            <button type="button" class="x" aria-label="{{ __('O‘chirish') }}" wire:click="removeLine({{ $line->id }})">✕</button>
                         </div>
                     @else
                         <div class="lc">
@@ -88,14 +84,14 @@
                     @endif
                 </li>
             @empty
-                <li class="placeholder">Tovar skanerlang yoki “Tanlash” tugmasini bosing.</li>
+                <li class="placeholder">{{ __('Tovar skanerlang yoki “Tanlash” tugmasini bosing.') }}</li>
             @endforelse
         </ul>
 
         {{-- Burger menu: the document header, with save / cancel / complete at the bottom. --}}
         <div id="scrim" @click="drawer = false"></div>
         <nav id="drawer" class="wide">
-            <div class="head">Hujjat sarlavhasi<small>{{ $doc->number }} · {{ $doc->type_label }}</small></div>
+            <div class="head">{{ __('Hujjat sarlavhasi') }}<small>{{ $doc->number }} · {{ $doc->type_label }}</small></div>
 
             <div class="dbody">
                 @if ($doc->isDraft())
@@ -116,24 +112,24 @@
 
             <div class="dactions">
                 @if ($doc->isDraft())
-                    <button type="button" class="btn" wire:click="saveHeader('draft')">Saqlash va chiqish</button>
+                    <button type="button" class="btn" wire:click="saveHeader('draft')">{{ __('Saqlash va chiqish') }}</button>
                 @endif
                 {{-- Exit: back to the document list without touching anything; the draft and its lines stay saved. --}}
-                <a class="btn gray" id="docExit" href="{{ route('docs.index', $doc->type) }}">Chiqish</a>
+                <a class="btn gray" id="docExit" href="{{ route('docs.index', $doc->type) }}">{{ __('Chiqish') }}</a>
                 @if ($doc->isDraft())
-                    <button type="button" class="btn red" wire:click="cancelDocument" wire:confirm="Hujjat o‘chiriladi. Bekor qilinsinmi?">Bekor qilish</button>
-                    <button type="button" class="btn green" wire:click="saveHeader('complete')">Yakunlash va saqlash</button>
+                    <button type="button" class="btn red" wire:click="cancelDocument" wire:confirm="{{ __('Hujjat o‘chiriladi. Bekor qilinsinmi?') }}">{{ __('Bekor qilish') }}</button>
+                    <button type="button" class="btn green" wire:click="saveHeader('complete')">{{ __('Yakunlash va saqlash') }}</button>
                 @endif
             </div>
         </nav>
 
         <x-slot:footer>
             <div class="footer totals">
-                <span>Pozitsiya: <strong>{{ $doc->lines->count() }}</strong></span>
-                @if ($doc->isPriceCheck())<span>Yorliq: <strong>{{ $doc->lines->where('check_action', 'print')->count() }}</strong></span>@endif
-                @if ($doc->canEditQty())<span>Miqdor: <strong>{{ $doc->lines->sum('qty') + 0 }}</strong></span>@endif
+                <span>{{ __('Pozitsiya:') }} <strong>{{ $doc->lines->count() }}</strong></span>
+                @if ($doc->isPriceCheck())<span>{{ __('Yorliq:') }} <strong>{{ $doc->lines->where('check_action', 'print')->count() }}</strong></span>@endif
+                @if ($doc->canEditQty())<span>{{ __('Miqdor:') }} <strong>{{ $doc->lines->sum('qty') + 0 }}</strong></span>@endif
                 @if ($doc->canEditQty() && $doc->canEditPrice())
-                    <span>Summa: <strong>{{ number_format($doc->lines->sum(fn ($l) => $l->qty * $l->price), 0, '.', ' ') }}</strong></span>
+                    <span>{{ __('Summa:') }} <strong>{{ number_format($doc->lines->sum(fn ($l) => $l->qty * $l->price), 0, '.', ' ') }}</strong></span>
                 @endif
             </div>
         </x-slot:footer>

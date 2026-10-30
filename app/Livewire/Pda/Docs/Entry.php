@@ -24,6 +24,10 @@ class Entry extends PdaPage
     #[Locked]
     public int $itemId;
 
+    /** The line being corrected (opened from the item list); 0 = adding. */
+    #[Locked]
+    public int $lineId = 0;
+
     public string $qty = '1';
 
     public string $price = '';
@@ -42,6 +46,14 @@ class Entry extends PdaPage
         $this->itemId = $itemModel->id;
         $this->qty = (string) (max((float) request()->query('qty', 1), 0.001) + 0);
         $this->price = (string) ($itemModel->priceFor($document->effectivePriceTypeId()) + 0);
+
+        // ?line=ID: change qty / price of a line already in the list
+        if (! $document->isPriceCheck() && $document->isDraft() && ($line = $document->lines()->where('item_id', $itemModel->id)->find((int) request()->query('line')))) {
+            $this->lineId = $line->id;
+            $this->qty = (string) ($line->qty + 0);
+            $this->price = (string) ($line->price + 0);
+            $this->production_date = $line->production_date?->toDateString() ?? '';
+        }
     }
 
     public function save()
@@ -60,12 +72,28 @@ class Entry extends PdaPage
         $document->tracksProduction() && $rules['production_date'] = 'nullable|date|before_or_equal:today';
 
         $data = $this->validate($rules, [
-            'required' => ':attribute kiritilishi shart.', 'numeric' => ':attribute raqam bo‘lishi kerak.',
-            'min' => ':attribute juda kichik.', 'date' => ':attribute noto‘g‘ri sana.',
-            'before_or_equal' => ':attribute kelajakda bo‘lishi mumkin emas.',
-        ], ['qty' => 'Miqdor', 'price' => 'Narx', 'production_date' => 'Ishlab chiqarilgan sana']);
+            'required' => __(':attribute kiritilishi shart.'), 'numeric' => __(':attribute raqam bo‘lishi kerak.'),
+            'min' => __(':attribute juda kichik.'), 'date' => __(':attribute noto‘g‘ri sana.'),
+            'before_or_equal' => __(':attribute kelajakda bo‘lishi mumkin emas.'),
+        ], ['qty' => __('Miqdor'), 'price' => __('Narx'), 'production_date' => __('Ishlab chiqarilgan sana')]);
 
         $date = ($data['production_date'] ?? '') ?: null;
+
+        if ($this->lineId && ($edited = $document->lines()->where('item_id', $item->id)->find($this->lineId))) {
+            // correcting: the qty replaces the old one; a date that already has its own line merges into it
+            $other = $document->lines()->where('item_id', $item->id)->whereKeyNot($edited->id)
+                ->when($date, fn ($q) => $q->whereDate('production_date', $date), fn ($q) => $q->whereNull('production_date'))->first();
+            $qty = $document->canEditQty() ? (float) $data['qty'] : 1;
+            $target = $other ?? $edited;
+            $target->qty = $other ? $other->qty + $qty : $qty;
+            $target->price = $data['price'] ?? $edited->price;
+            $target->production_date = $date;
+            $target->expiry_date = $date && $item->shelf_life_days !== null ? \Carbon\Carbon::parse($date)->addDays($item->shelf_life_days) : null;
+            $target->save();
+            $other && $edited->delete();
+
+            return $this->redirect(route('docs.show', $document->id));
+        }
 
         $line = $document->lines()->where('item_id', $item->id)
             ->when($date, fn ($q) => $q->whereDate('production_date', $date), fn ($q) => $q->whereNull('production_date'))
@@ -152,7 +180,7 @@ class Entry extends PdaPage
             'doc' => $document,
             'item' => $item,
             'priceSystem' => $item->priceFor($document->effectivePriceTypeId()) + 0,
-            'lines' => $document->lines()->where('item_id', $item->id)->orderBy('production_date')->get(),
+            'lines' => $document->lines()->where('item_id', $item->id)->whereKeyNot($this->lineId)->orderBy('production_date')->get(),
             'stocks' => $item->stocks()->join('warehouses', 'warehouses.id', '=', 'item_stocks.warehouse_id')
                 ->when(auth()->user()->accessibleWarehouseIds(), fn ($q, $ids) => $q->whereIn('item_stocks.warehouse_id', $ids)) // only the warehouses the user has access to
                 ->orderBy('warehouses.name')->get(['warehouses.name', 'item_stocks.qty']),

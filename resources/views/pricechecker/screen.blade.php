@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-    <title>Narx tekshirgich</title>
+    <title>{{ __('Narx tekshirgich') }}</title>
     <link rel="stylesheet" href="{{ asset('css/checker.css') }}?v={{ @filemtime(public_path('css/checker.css')) }}">
     <style>html, body { margin: 0; height: 100%; overflow: hidden; background: #000; } #scan { position: absolute; left: -9999px; }</style>
 </head>
@@ -38,9 +38,10 @@
                 stage.querySelectorAll('[data-f]').forEach(function (el) {
                     var f = el.dataset.f, v = f === 'stock_text' ? (d.stock && d.stock.text) : d[f];
                     v = v == null ? '' : String(v);
-                    if (f === 'image') { el.src = v; el.hidden = !v; var box = stage.querySelector('[data-f-box=image]'); if (box) box.hidden = !v; return; }
+                    if (f === 'image') { el.src = v; el.hidden = !v; var ph = stage.querySelector('.pcs-img-ph'); if (ph) ph.hidden = !!v; return; }
                     el.textContent = v;
                 });
+                stage.querySelectorAll('[data-svg]').forEach(function (el) { el.innerHTML = d[el.dataset.svg] || ''; });
                 stage.querySelectorAll('.pcs-opt').forEach(function (el) {
                     var f = el.querySelector('[data-f]');
                     el.hidden = !(f && f.textContent.trim());

@@ -457,4 +457,31 @@ class TeamFeaturesTest extends TestCase
         $this->actingAs($this->operator())->get('/settings')->assertOk()
             ->assertSee('Ekran klaviaturasi')->assertSee('Administrator sozlamasi')->assertSee('kb_mode', false);
     }
+
+    public function test_interface_language_follows_the_user_and_defaults_to_uzbek(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $this->assertSame('uz', $admin->fresh()->locale);
+
+        // Uzbek by default
+        $this->actingAs($admin)->get('/admin/users')->assertOk()->assertSee('Foydalanuvchilar');
+
+        // the user form sets the language (only known codes)
+        $role = \App\Models\Role::create(['name' => 'Op', 'permissions' => ['pda.tasks']]);
+        $user = User::factory()->create(['role' => 'user', 'role_id' => $role->id]);
+        Livewire::actingAs($admin)->test(\App\Livewire\Admin\Users\Form::class, ['record' => $user->id])
+            ->assertSet('locale', 'uz')->set('locale', 'xx')->call('save')->assertHasErrors('locale');
+        Livewire::actingAs($admin)->test(\App\Livewire\Admin\Users\Form::class, ['record' => $user->id])
+            ->set('locale', 'ru')->call('save')->assertHasNoErrors();
+        $this->assertSame('ru', $user->fresh()->locale);
+
+        // a Russian user sees Russian texts (static view text, dynamic menu titles), Uzbek users keep Uzbek
+        $this->actingAs($user->fresh())->get('/')->assertOk()->assertSee('Настройки');
+        $this->actingAs($admin)->get('/')->assertOk()->assertSee('Sozlamalar');
+
+        // the sign-in page has a language switch kept in a cookie
+        auth()->logout();
+        $this->get('/lang/ru')->assertRedirect();
+        $this->get('/lang/xx')->assertNotFound();
+    }
 }

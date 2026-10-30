@@ -45,6 +45,12 @@ Route::middleware('checker')->group(function () {
 });
 
 // Main route: the authorization page for guests, the main menu once signed in.
+// language of the sign-in page (a signed-in user has the language of their profile)
+Route::get('/lang/{code}', function (string $code) {
+    abort_unless(isset(config('app.locales')[$code]), 404);
+
+    return back()->withCookie(cookie('lang', $code, 60 * 24 * 365 * 5));
+})->name('lang');
 Route::get('/', Pda\Menu::class)->middleware(['device', 'active', 'login.guests'])->name('menu');
 
 // PDA (mobile) interface, Livewire pages. `menu:<key>` = the admin can switch the menu item off per user.

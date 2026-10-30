@@ -40,9 +40,11 @@
     .pcs-result { @apply items-center; gap: calc(var(--u) * 4); }
     .pcs-img { @apply relative flex flex-none items-center justify-center overflow-hidden; width: calc(var(--u) * 38); height: calc(var(--u) * 38); border-radius: calc(var(--u) * 2); background: #fff; }
     .pcs-img img { @apply h-full w-full; object-fit: contain; }
-    .pcs-img-ph { font-size: calc(var(--u) * 2.4); color: #8a97a8; border: calc(var(--u) * .3) dashed #c3ccd8; border-radius: calc(var(--u) * 1.5); padding: calc(var(--u) * 3) calc(var(--u) * 2); }
+    .pcs-img .pcs-img-ph { width: 60%; height: 60%; opacity: .08; }
+    .pcs-media { @apply flex flex-none flex-col items-center; gap: calc(var(--u) * 1.5); }
+    .pcs-barsbox:empty { display: none; }
     .pcs-info { @apply min-w-0 flex-1; padding: calc(var(--u) * 3); border-radius: calc(var(--u) * 2); background: var(--card); text-align: var(--align); }
-    .pcs[data-img=right] .pcs-img { order: 2; }
+    .pcs[data-img=right] .pcs-media { order: 2; }
     .pcs-name { margin-bottom: calc(var(--u) * 2); font-size: calc(var(--u) * 5 * var(--name-scale)); font-weight: 600; color: var(--name); line-height: 1.15; overflow-wrap: anywhere; }
     .pcs-price { @apply font-extrabold; font-size: calc(var(--u) * 15 * var(--price-scale)); color: var(--price); line-height: 1; white-space: nowrap; }
     .pcs-price small { @apply font-normal; font-size: .27em; color: var(--text); }
@@ -54,6 +56,9 @@
     .pcs-stock span { display: inline-block; padding: calc(var(--u) * .4) calc(var(--u) * 1.8); border-radius: calc(var(--u) * 2); background: #2e7d32; color: #fff; }
     .pcs[data-stock=low] .pcs-stock span { background: #ef6c00; }
     .pcs[data-stock=out] .pcs-stock span { background: #c62828; }
+    .pcs-barsbox { background: #fff; padding: calc(var(--u) * 1) calc(var(--u) * 1.5); border-radius: calc(var(--u) * 1); }
+    .pcs-bartext { margin-top: calc(var(--u) * .5); text-align: center; color: #000; font-family: ui-monospace, Consolas, monospace; font-size: calc(var(--u) * 2.8); letter-spacing: .18em; line-height: 1.1; }
+    .pcs-barsbox svg { display: block; width: calc(var(--u) * 35); height: calc(var(--u) * 9); }
     .pcs-chips { margin-top: calc(var(--u) * 2); display: flex; flex-wrap: wrap; gap: calc(var(--u) * 1.5); justify-content: var(--chips-just, center); font-size: calc(var(--u) * 2.6); opacity: .85; }
 
     .pcs-err-title { font-size: calc(var(--u) * 6.5); font-weight: 700; color: var(--err); }

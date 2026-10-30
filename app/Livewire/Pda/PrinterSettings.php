@@ -56,12 +56,12 @@ class PrinterSettings extends PdaPage
             : $rules += ['bt_name' => 'required|max:100', 'bt_address' => 'nullable|max:100'];
 
         $this->validate($rules, [
-            'required' => ':attribute kiritilishi shart.', 'regex' => ':attribute noto‘g‘ri.', 'integer' => ':attribute son bo‘lishi kerak.', 'between' => ':attribute noto‘g‘ri.',
-        ], ['host' => 'IP manzil', 'port' => 'Port', 'bt_name' => 'Printer nomi']);
+            'required' => __(':attribute kiritilishi shart.'), 'regex' => __(':attribute noto‘g‘ri.'), 'integer' => __(':attribute son bo‘lishi kerak.'), 'between' => __(':attribute noto‘g‘ri.'),
+        ], ['host' => __('IP manzil'), 'port' => 'Port', 'bt_name' => __('Printer nomi')]);
 
         $lan = $this->kind === 'lan';
         $printer = Printer::updateOrCreate(['owner_device_id' => $device->id], [
-            'name' => ($device->name ?: 'PDA').' printeri',
+            'name' => ($device->name ?: 'PDA').' '.__('printeri'),
             'kind' => $this->kind,
             'host' => $lan ? $this->host : '',
             'port' => $lan ? (int) $this->port : 9100,

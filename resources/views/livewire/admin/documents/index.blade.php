@@ -5,27 +5,27 @@
 
     <div class="bar">
         <select wire:model.live="type">
-            <option value="">Barcha turlar</option>
+            <option value="">{{ __('Barcha turlar') }}</option>
             @foreach (collect(\App\Models\Document::types())->when(auth()->user()->adminDocumentTypes() !== null, fn ($c) => $c->only(auth()->user()->adminDocumentTypes())) as $key => $label)<option value="{{ $key }}">{{ $label }}</option>@endforeach
         </select>
         <select wire:model.live="status">
-            <option value="">Barcha holatlar</option>
-            <option value="draft">Qoralama</option>
-            <option value="completed">Yakunlangan</option>
+            <option value="">{{ __('Barcha holatlar') }}</option>
+            <option value="draft">{{ __('Qoralama') }}</option>
+            <option value="completed">{{ __('Yakunlangan') }}</option>
         </select>
         <select wire:model.live="sync">
-            <option value="">Adines: barchasi</option>
-            <option value="pending">Kutilmoqda</option>
-            <option value="synced">Yuborilgan</option>
-            <option value="error">Xato</option>
+            <option value="">{{ __('Adines: barchasi') }}</option>
+            <option value="pending">{{ __('Kutilmoqda') }}</option>
+            <option value="synced">{{ __('Yuborilgan') }}</option>
+            <option value="error">{{ __('Xato') }}</option>
         </select>
         <span class="grow"></span>
-        <button class="btn" wire:click="syncAll" wire:loading.attr="disabled">Yakunlanganlarni Adines ga yuborish</button>
+        <button class="btn" wire:click="syncAll" wire:loading.attr="disabled">{{ __('Yakunlanganlarni Adines ga yuborish') }}</button>
     </div>
 
     <table>
         <thead>
-            <tr><th>Raqam</th><th>Turi</th><th>Operator</th><th class="num">Tovarlar</th><th>Holat</th><th>Adines / chop etish</th><th>Sana</th></tr>
+            <tr><th>{{ __('Raqam') }}</th><th>{{ __('Turi') }}</th><th>{{ __('Operator') }}</th><th class="num">{{ __('Tovarlar') }}</th><th>{{ __('Holat') }}</th><th>{{ __('Adines / chop etish') }}</th><th>{{ __('Sana') }}</th></tr>
         </thead>
         <tbody>
             @forelse ($docs as $doc)
@@ -42,7 +42,7 @@
                     <td>{{ $doc->created_at->format('d.m.Y H:i') }}</td>
                 </tr>
             @empty
-                <tr><td colspan="7">Hujjatlar yo‘q.</td></tr>
+                <tr><td colspan="7">{{ __('Hujjatlar yo‘q.') }}</td></tr>
             @endforelse
         </tbody>
     </table>

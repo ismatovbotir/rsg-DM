@@ -4,10 +4,10 @@
         <div class="lbl" wire:key="f-{{ $name }}">
             {{ $f['label'] }}@if ($f['required'])<span class="req"> *</span>@endif
             <div class="scanrow mt-1">
-                <input class="field" wire:model.live.debounce.250ms="cp_q" placeholder="Nomi yoki STIR" autocomplete="off" @kb>
-                <button type="button" class="btn" wire:click="toggleCpList">Tanlash</button>
+                <input class="field" wire:model.live.debounce.250ms="cp_q" placeholder="{{ __('Nomi yoki STIR') }}" autocomplete="off" @kb>
+                <button type="button" class="btn" wire:click="toggleCpList">{{ __('Tanlash') }}</button>
             </div>
-            @if (filled($header[$name] ?? null) && ($picked = \App\Models\Counterparty::find($header[$name])) && $picked->stir)<span class="sub">STIR {{ $picked->stir }}</span>@endif
+            @if (filled($header[$name] ?? null) && ($picked = \App\Models\Counterparty::find($header[$name])) && $picked->stir)<span class="sub">{{ __('STIR') }} {{ $picked->stir }}</span>@endif
             @if ($cp_list)
                 <ul class="list max-h-60 overflow-y-auto">
                     @forelse ($cpResults as $r)
@@ -17,7 +17,7 @@
                             </button>
                         </li>
                     @empty
-                        <li class="placeholder">Topilmadi.</li>
+                        <li class="placeholder">{{ __('Topilmadi.') }}</li>
                     @endforelse
                 </ul>
             @endif
@@ -29,7 +29,7 @@
                 <input class="field" value="{{ $warehouses->firstWhere('id', $lockedWarehouse)?->name }}" disabled>
             @else
                 <select class="field" wire:model="header.{{ $name }}">
-                    <option value="">— tanlang —</option>
+                    <option value="">{{ __('— tanlang —') }}</option>
                     @foreach (($name === 'warehouse_id' ? ($sourceWarehouses ?? $warehouses) : $warehouses) as $w)<option value="{{ $w->id }}">{{ $w->name }}</option>@endforeach
                 </select>
             @endif
@@ -38,7 +38,7 @@
         <label class="lbl" wire:key="f-{{ $name }}">
             {{ $f['label'] }}@if ($f['required'])<span class="req"> *</span>@endif
             <select class="field" wire:model="header.{{ $name }}">
-                <option value="">— tanlang —</option>
+                <option value="">{{ __('— tanlang —') }}</option>
                 @foreach ($priceTypes as $pt)<option value="{{ $pt->id }}">{{ $pt->name }}</option>@endforeach
             </select>
         </label>

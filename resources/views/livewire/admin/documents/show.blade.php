@@ -4,7 +4,7 @@
     @include('partials.lw-flash')
 
     <div class="bar">
-        <a class="btn gray" href="{{ route('admin.documents.index') }}">← Ro‘yxat</a>
+        <a class="btn gray" href="{{ route('admin.documents.index') }}">{{ __('← Ro‘yxat') }}</a>
         <span class="badge {{ $doc->status }}">{{ $doc->status_label }}</span>
         @if (! $doc->isDraft() && $doc->syncs())<span class="badge {{ $doc->onec_status }}">{{ $doc->sync_label }}</span>@endif
         @if ($doc->print_label)<span class="badge {{ $doc->print_state }}">{{ $doc->print_label }}</span>@endif
@@ -13,16 +13,16 @@
             <button class="btn" wire:click="print" wire:loading.attr="disabled" @disabled($doc->print_count === 0)>{{ $doc->printed_at ? 'Qayta chop etish' : 'Chop etish' }}</button>
         @endif
         @if (! $doc->isDraft() && $doc->syncs() && $doc->onec_status !== 'synced')
-            <button class="btn" wire:click="sync" wire:loading.attr="disabled">Adines ga yuborish</button>
+            <button class="btn" wire:click="sync" wire:loading.attr="disabled">{{ __('Adines ga yuborish') }}</button>
         @endif
     </div>
 
     <div class="card !block mb-4">
         <strong>{{ $doc->type_label }}</strong> · {{ $doc->user?->name }}
-        · yaratilgan {{ $doc->created_at->format('d.m.Y H:i') }}
-        @if ($doc->completed_at) · yakunlangan {{ $doc->completed_at->format('d.m.Y H:i') }}@endif
-        @if ($doc->printed_at) · chop etilgan {{ $doc->printed_at->format('d.m.Y H:i') }}@endif
-        @if ($doc->synced_at) · Adines ga yuborilgan {{ $doc->synced_at->format('d.m.Y H:i') }}@endif
+        {{ __('· yaratilgan') }} {{ $doc->created_at->format('d.m.Y H:i') }}
+        @if ($doc->completed_at) {{ __('· yakunlangan') }} {{ $doc->completed_at->format('d.m.Y H:i') }}@endif
+        @if ($doc->printed_at) {{ __('· chop etilgan') }} {{ $doc->printed_at->format('d.m.Y H:i') }}@endif
+        @if ($doc->synced_at) {{ __('· Adines ga yuborilgan') }} {{ $doc->synced_at->format('d.m.Y H:i') }}@endif
         <table class="mt-3">
             @foreach ($doc->headerDisplay() as $name => $value)
                 <tr>
@@ -37,9 +37,9 @@
     <table>
         <thead>
             <tr>
-                <th>Kod</th><th>Artikul</th><th>Shtrix-kod</th><th>Nomi</th><th>Birlik</th>
-                @if ($doc->isPriceCheck())<th class="num">Tizim narxi</th><th class="num">Javondagi narx</th><th>Natija</th>
-                @else<th class="num">Miqdor</th><th class="num">Narx</th>@endif
+                <th>{{ __('Kod') }}</th><th>{{ __('Artikul') }}</th><th>{{ __('Shtrix-kod') }}</th><th>{{ __('Nomi') }}</th><th>{{ __('Birlik') }}</th>
+                @if ($doc->isPriceCheck())<th class="num">{{ __('Tizim narxi') }}</th><th class="num">{{ __('Javondagi narx') }}</th><th>{{ __('Natija') }}</th>
+                @else<th class="num">{{ __('Miqdor') }}</th><th class="num">{{ __('Narx') }}</th>@endif
             </tr>
         </thead>
         <tbody>
@@ -60,7 +60,7 @@
                     @endif
                 </tr>
             @empty
-                <tr><td colspan="9">Qatorlar yo‘q.</td></tr>
+                <tr><td colspan="9">{{ __('Qatorlar yo‘q.') }}</td></tr>
             @endforelse
         </tbody>
     </table>

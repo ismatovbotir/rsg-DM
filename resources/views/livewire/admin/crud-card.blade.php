@@ -8,9 +8,9 @@
     <div class="bar">
         <h1 class="m-0 text-base font-semibold">{{ $record->name }}</h1>
         @if ($hasStatus)<span class="badge {{ $record->is_active ? 'completed' : 'error' }}">{{ $record->is_active ? 'Faol' : 'Nofaol' }}</span>@endif
-        <span class="badge">Adines · faqat ko‘rish</span>
+        <span class="badge">{{ __('Adines · faqat ko‘rish') }}</span>
         <span class="grow"></span>
-        <a class="btn sm gray" href="{{ $back }}">Yopish</a>
+        <a class="btn sm gray" href="{{ $back }}">{{ __('Yopish') }}</a>
     </div>
 
     @if ($figures)
@@ -28,8 +28,8 @@
                     @foreach ($rows as [$label, $value])
                         <tr><th class="w-56">{{ $label }}</th><td>{{ $value === null || $value === '' ? '—' : $value }}</td></tr>
                     @endforeach
-                    <tr><th class="w-56">Yaratilgan</th><td>{{ $record->created_at?->format('d.m.Y H:i') ?? '—' }}</td></tr>
-                    <tr><th>Yangilangan (Adines)</th><td>{{ $record->updated_at?->format('d.m.Y H:i') ?? '—' }}</td></tr>
+                    <tr><th class="w-56">{{ __('Yaratilgan') }}</th><td>{{ $record->created_at?->format('d.m.Y H:i') ?? '—' }}</td></tr>
+                    <tr><th>{{ __('Yangilangan (Adines)') }}</th><td>{{ $record->updated_at?->format('d.m.Y H:i') ?? '—' }}</td></tr>
                 </tbody>
             </table>
         </div>

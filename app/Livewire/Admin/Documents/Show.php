@@ -44,7 +44,7 @@ class Show extends AdminPage
             return;
         }
 
-        $this->ok($count ? "{$count} ta yorliq {$printer->name} printeriga yuborildi." : 'Chop etiladigan yorliq yo‘q.');
+        $this->ok($count ? __(':count ta yorliq :printer printeriga yuborildi.', ['count' => $count, 'printer' => $printer->name]) : __('Chop etiladigan yorliq yo‘q.'));
     }
 
     public function sync(OneCClient $onec): void
@@ -71,7 +71,7 @@ class Show extends AdminPage
             return;
         }
 
-        $ok ? $this->ok('Adines ga yuborildi.') : $this->fail('Xato: '.$document->fresh()->onec_error);
+        $ok ? $this->ok('Adines ga yuborildi.') : $this->fail(__('Xato:').' '.$document->fresh()->onec_error);
     }
 
     public function render()

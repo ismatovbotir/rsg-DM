@@ -35,6 +35,8 @@ class Form extends AdminPage
 
     public bool $pda_user = false;
 
+    public string $locale = 'uz';
+
     /** @var list<string> permission keys of the role that stay switched on for this user */
     public array $perms = [];
 
@@ -55,7 +57,7 @@ class Form extends AdminPage
         $this->recordId = $user?->id;
 
         if ($user) {
-            $this->fill(['name' => $user->name, 'email' => $user->email, 'is_active' => $user->is_active, 'pda_user' => $user->pda_user, 'role_id' => (string) $user->role_id, 'warehouse_id' => (string) $user->warehouse_id]);
+            $this->fill(['name' => $user->name, 'email' => $user->email, 'is_active' => $user->is_active, 'pda_user' => $user->pda_user, 'locale' => $user->locale ?: 'uz', 'role_id' => (string) $user->role_id, 'warehouse_id' => (string) $user->warehouse_id]);
             $this->warehouse_ids = $user->warehouseAccess()->pluck('warehouses.id')->map(fn ($id) => (string) $id)->all();
             $this->price_type_ids = $user->priceTypeAccess()->pluck('price_types.id')->map(fn ($id) => (string) $id)->all();
         } else {
@@ -84,6 +86,7 @@ class Form extends AdminPage
             'password' => [$this->recordId ? 'nullable' : 'required', 'string', 'min:6', 'max:100'], // blank = keep the current password
             'is_active' => 'boolean',
             'pda_user' => 'boolean',
+            'locale' => ['required', \Illuminate\Validation\Rule::in(array_keys(config('app.locales')))],
             'warehouse_ids' => 'array',
             'warehouse_ids.*' => 'exists:warehouses,id',
             'price_type_ids' => 'array',

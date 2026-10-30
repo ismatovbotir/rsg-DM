@@ -4,12 +4,12 @@
     @include('partials.lw-flash')
 
     <div class="bar">
-        <input wire:model.live.debounce.300ms="q" placeholder="Qidirish: kod, shtrix-kod, nomi" size="34">
+        <input wire:model.live.debounce.300ms="q" placeholder="{{ __('Qidirish: kod, shtrix-kod, nomi') }}" size="34">
         <span class="grow"></span>
     </div>
 
     <table>
-        <thead><tr><th>Kod</th><th>Artikul</th><th>Shtrix-kod</th><th>Nomi</th><th>Birlik</th><th>Guruh</th><th class="num">Narx</th></tr></thead>
+        <thead><tr><th>{{ __('Kod') }}</th><th>{{ __('Artikul') }}</th><th>{{ __('Shtrix-kod') }}</th><th>{{ __('Nomi') }}</th><th>{{ __('Birlik') }}</th><th>{{ __('Guruh') }}</th><th class="num">{{ __('Narx') }}</th></tr></thead>
         <tbody>
             @forelse ($items as $item)
                 <tr wire:key="item-{{ $item->id }}">
@@ -22,7 +22,7 @@
                     <td class="num">{{ number_format($item->price, 2, '.', ' ') }}</td>
                 </tr>
             @empty
-                <tr><td colspan="7">Tovarlar yo‘q.</td></tr>
+                <tr><td colspan="7">{{ __('Tovarlar yo‘q.') }}</td></tr>
             @endforelse
         </tbody>
     </table>

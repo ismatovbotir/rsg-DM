@@ -30,6 +30,9 @@ class AppServiceProvider extends ServiceProvider
             \App\Http\Middleware\EnsureMenuAccess::class,
         ]);
 
+        // every echoed text that is a known Uzbek text appears in the language of the user
+        Blade::setEchoFormat('e(\App\Support\Tr::t(%s))');
+
         Blade::directive('kb', fn () => '<?php echo ($kbOff ?? true) ? \'inputmode="none"\' : \'\'; ?>');
     }
 }

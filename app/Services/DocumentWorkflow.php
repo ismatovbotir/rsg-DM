@@ -91,6 +91,6 @@ class DocumentWorkflow
             return [$e->getMessage(), true];
         }
 
-        return [$count ? "{$count} ta yorliq {$printer->name} printeriga yuborildi." : 'Chop etiladigan yorliq yo‘q.', false];
+        return [$count ? __(':count ta yorliq :printer printeriga yuborildi.', ['count' => $count, 'printer' => $printer->name]) : __('Chop etiladigan yorliq yo‘q.'), false];
     }
 }

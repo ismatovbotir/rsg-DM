@@ -8,14 +8,14 @@
             <input wire:model.live.debounce.300ms="q" placeholder="{{ $searchPlaceholder }}" size="32">
         @endif
         <span class="grow"></span>
-        <span class="sub">Ma’lumotlar Adines dan keladi.</span>
+        <span class="sub">{{ __('Ma’lumotlar Adines dan keladi.') }}</span>
     </div>
 
     <table>
         <thead>
             <tr>
                 @foreach ($columns as $column)<th @class(['num' => ($column[2] ?? null) === 'num'])>{{ $column[0] }}</th>@endforeach
-                @if ($hasStatus)<th>Holat</th>@endif
+                @if ($hasStatus)<th>{{ __('Holat') }}</th>@endif
             </tr>
         </thead>
         <tbody>

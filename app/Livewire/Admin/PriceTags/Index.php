@@ -29,7 +29,7 @@ class Index extends AdminPage
             return;
         }
 
-        $this->ok("{$count} ta yorliq {$printer->name} printeriga yuborildi.");
+        $this->ok(__(':count ta yorliq :printer printeriga yuborildi.', ['count' => $count, 'printer' => $printer->name]));
     }
 
     public function markPrinted(PriceTagPrinter $printing): void
@@ -37,7 +37,7 @@ class Index extends AdminPage
         $count = PriceCheck::queued()->update(['printed_at' => now()]);
         $printing->syncDocumentStatus();
 
-        $this->ok("{$count} ta yorliq chop etilgan deb belgilandi.");
+        $this->ok(__(':count ta yorliq chop etilgan deb belgilandi.', ['count' => $count]));
     }
 
     public function remove(int $id): void

@@ -30,6 +30,7 @@ class User extends Authenticatable
         'role_id',
         'warehouse_id',
         'pda_user',
+        'locale',
         'denied_permissions',
     ];
 

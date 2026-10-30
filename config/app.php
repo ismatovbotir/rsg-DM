@@ -83,7 +83,10 @@ return [
     |
     */
 
-    'locale' => 'en',
+    'locale' => 'uz',
+
+    // interface languages (code => name in its own language); Uzbek is the source text, the others live in lang/<code>.json
+    'locales' => ['uz' => 'O‘zbekcha', 'ru' => 'Русский'],
 
     /*
     |--------------------------------------------------------------------------
@@ -96,7 +99,7 @@ return [
     |
     */
 
-    'fallback_locale' => 'en',
+    'fallback_locale' => 'uz',
 
     /*
     |--------------------------------------------------------------------------

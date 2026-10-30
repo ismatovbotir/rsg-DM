@@ -30,6 +30,7 @@ class CheckerItem
             'code' => (string) $item->code,
             'article' => (string) $item->article,
             'barcode' => (string) $item->barcode,
+            'barcode_svg' => $design['show_barcode'] ? Barcode::svg((string) $item->barcode) : '',
             'group' => (string) ($item->group?->name ?? ''),
             'image' => self::imageUrlOf($item),
             'price' => $price,

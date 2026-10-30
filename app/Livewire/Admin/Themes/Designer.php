@@ -147,7 +147,7 @@ class Designer extends AdminPage
 
         $item = $picked
             ? CheckerItem::payload($picked, $safe, null)
-            : ['found' => true, 'name' => 'Namuna tovar nomi', 'unit' => 'dona', 'code' => '1001', 'article' => 'ART-1', 'barcode' => '4780000000011', 'group' => 'Guruh', 'image' => '', 'price_text' => '12 500', 'old_price_text' => '', 'promo' => false, 'second_price_text' => '', 'stock' => ['state' => '', 'text' => '']];
+            : ['found' => true, 'name' => 'Namuna tovar nomi', 'unit' => 'dona', 'code' => '1001', 'article' => 'ART-1', 'barcode' => '4780000000011', 'barcode_svg' => \App\Support\Barcode::svg('4780000000011'), 'group' => 'Guruh', 'image' => '', 'price_text' => '12 500', 'old_price_text' => '', 'promo' => false, 'second_price_text' => '', 'stock' => ['state' => '', 'text' => '']];
 
         // sample values for the optional blocks, so the admin sees them even when the item has no promo / stock
         if ($safe['old_price_type_id'] && $item['old_price_text'] === '') {

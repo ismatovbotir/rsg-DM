@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-    <title>Narx tekshirgich</title>
+    <title>{{ __('Narx tekshirgich') }}</title>
     <link rel="stylesheet" href="{{ asset('css/checker.css') }}?v={{ @filemtime(public_path('css/checker.css')) }}">
     <style>html, body { margin: 0; height: 100%; overflow: hidden; background: #000; }</style>
 </head>

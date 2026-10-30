@@ -8,13 +8,13 @@
      ">
     <x-pda.page :home="true" :notice="$notice" :failure="$failure">
         <x-slot:header>
-            <button class="hbtn" type="button" aria-label="Menyu" @click="drawer = true">☰</button>
+            <button class="hbtn" type="button" aria-label="{{ __('Menyu') }}" @click="drawer = true">☰</button>
             <span class="title">{{ config('menu.app_name') }}</span>
-            <a class="hbtn" href="{{ route('messages.index') }}" aria-label="Xabarlar">
+            <a class="hbtn" href="{{ route('messages.index') }}" aria-label="{{ __('Xabarlar') }}">
                 <svg class="ico"><use href="#i-bell"/></svg>
                 @if ($unread)<span class="dot">{{ $unread }}</span>@endif
             </a>
-            <button class="hbtn" type="button" id="exchange" aria-label="Server bilan almashinuv" title="Server bilan almashinuv">⇅</button>
+            <button class="hbtn" type="button" id="exchange" aria-label="{{ __('Server bilan almashinuv') }}" title="{{ __('Server bilan almashinuv') }}">⇅</button>
         </x-slot:header>
 
         {{-- Urgent unread messages show once as a banner on the home screen only, never inside a scan flow. --}}
@@ -48,7 +48,7 @@
                     <li>
                         <a class="row" href="{{ route('admin.home') }}">
                             <span class="icon"><svg class="ico"><use href="#i-directories"/></svg></span>
-                            <span class="label">Boshqaruv paneli</span>
+                            <span class="label">{{ __('Boshqaruv paneli') }}</span>
                         </a>
                     </li>
                 @endif

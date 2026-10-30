@@ -35,7 +35,7 @@ class ItemCard extends PdaPage
             return $this->redirect(route('item', $hit[0]->id));
         }
 
-        $this->fail("Topilmadi: {$code}");
+        $this->fail(__('Topilmadi: :code', ['code' => $code]));
     }
 
     public function render()

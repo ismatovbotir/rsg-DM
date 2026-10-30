@@ -36,7 +36,7 @@ class Index extends AdminPage
             return;
         }
 
-        $this->ok("Yuborildi: {$sent}, xato: {$failed}.");
+        $this->ok(__('Yuborildi: :sent, xato: :failed.', ['sent' => $sent, 'failed' => $failed]));
     }
 
     public function render()

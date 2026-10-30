@@ -1,11 +1,11 @@
 <!doctype html>
-<html lang="uz">
+<html lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, interactive-widget=resizes-content">
     <meta name="theme-color" content="#e51932">
     <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
-    <title>@yield('title', config('menu.app_name'))</title>
+    <title>{!! \App\Support\Tr::t($__env->yieldContent('title', config('menu.app_name'))) !!}</title>
     <link rel="stylesheet" href="{{ asset('css/pda.css') }}?v={{ @filemtime(public_path('css/pda.css')) }}">
 </head>
 <body data-kb="{{ $device->keyboard_mode ?? 'auto' }}">

@@ -186,6 +186,14 @@ class DocumentFlowTest extends TestCase
         $this->enter($user, $doc, $other->code);
         $this->assertSame(2, $doc->lines()->count());
 
+        // the list shows qty as information; the entry page (?line=) corrects it (replaces, does not add)
+        $screen()->assertDontSee('wire:change="updateQty', false)->assertSee('O‘zgartirish');
+        $this->actingAs($user)->get(route('docs.entry', [$doc->id, $item->id]).'?line='.$line->id)->assertOk()->assertSee('Tahrirlash');
+        Livewire::actingAs($user)->withQueryParams(['line' => $line->id])->test(\App\Livewire\Pda\Docs\Entry::class, ['record' => $doc->id, 'item' => $item->id])
+            ->assertSet('qty', '2')->set('qty', '7')->call('save')->assertRedirect(route('docs.show', $doc->id));
+        $this->assertEquals(7, $line->fresh()->qty);
+        $line->update(['qty' => 2]);
+
         // receiving lets the operator edit both qty and price
         $screen()->call('updateQty', $line->id, '5')->call('updatePrice', $line->id, '90');
         $this->assertEquals(5, $line->fresh()->qty);

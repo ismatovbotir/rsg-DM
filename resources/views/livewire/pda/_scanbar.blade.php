@@ -5,5 +5,5 @@
 --}}
 <form class="pad scanrow sticky" wire:submit="{{ $submit }}">
     <input class="field" wire:model="{{ $model }}" placeholder="{{ $placeholder ?? 'Shtrix-kod, kod yoki artikul' }}" autocomplete="off" @kb autofocus x-init="$el.focus()">
-    <a class="btn browse" href="{{ $browse }}">Tanlash</a>
+    <a class="btn browse" href="{{ $browse }}">{{ __('Tanlash') }}</a>
 </form>

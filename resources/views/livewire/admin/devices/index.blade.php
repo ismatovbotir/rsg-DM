@@ -3,10 +3,10 @@
 <div>
     @include('partials.lw-flash')
 
-    <p>Har bir PDA birinchi ochilganda shu yerda nomsiz qurilma sifatida paydo bo‘ladi. Unga nom bering, ekran klaviaturasi rejimini tanlang va printer biriktiring.</p>
+    <p>{{ __('Har bir PDA birinchi ochilganda shu yerda nomsiz qurilma sifatida paydo bo‘ladi. Unga nom bering, ekran klaviaturasi rejimini tanlang va printer biriktiring.') }}</p>
 
     <table>
-        <thead><tr><th>Nomi</th><th>Klaviatura</th><th>Printer</th><th>Oxirgi foydalanuvchi</th><th>Oxirgi faollik</th><th>Brauzer</th><th></th></tr></thead>
+        <thead><tr><th>{{ __('Nomi') }}</th><th>{{ __('Klaviatura') }}</th><th>{{ __('Printer') }}</th><th>{{ __('Oxirgi foydalanuvchi') }}</th><th>{{ __('Oxirgi faollik') }}</th><th>{{ __('Brauzer') }}</th><th></th></tr></thead>
         <tbody>
             @forelse ($devices as $device)
                 <tr wire:key="device-{{ $device->id }}">
@@ -17,11 +17,11 @@
                     <td>{{ $device->last_seen_at?->format('d.m.Y H:i') }}</td>
                     <td><small>{{ \Illuminate\Support\Str::limit($device->user_agent, 50) }}</small></td>
                     <td class="text-right">
-                        <button class="btn sm red" wire:click="delete({{ $device->id }})" wire:confirm="Qurilma o‘chirilsinmi?">O‘chirish</button>
+                        <button class="btn sm red" wire:click="delete({{ $device->id }})" wire:confirm="{{ __('Qurilma o‘chirilsinmi?') }}">{{ __('O‘chirish') }}</button>
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="7">Hali qurilma yo‘q.</td></tr>
+                <tr><td colspan="7">{{ __('Hali qurilma yo‘q.') }}</td></tr>
             @endforelse
         </tbody>
     </table>

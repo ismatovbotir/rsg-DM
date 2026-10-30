@@ -2,7 +2,7 @@
 <html lang="uz">
 <head>
     <meta charset="utf-8">
-    <title>Narx yorliqlari</title>
+    <title>{{ __('Narx yorliqlari') }}</title>
     <style>
         body { margin: 10mm; font-family: system-ui, sans-serif; }
         .sheet { display: grid; grid-template-columns: repeat(3, 60mm); gap: 4mm; }
@@ -15,12 +15,12 @@
     </style>
 </head>
 <body onload="window.print()">
-    <p class="noprint">{{ $checks->count() }} ta yorliq. Chop etgandan so‘ng “Chop etilgan deb belgilash” tugmasini bosing.</p>
+    <p class="noprint">{{ $checks->count() }} {{ __('ta yorliq. Chop etgandan so‘ng “Chop etilgan deb belgilash” tugmasini bosing.') }}</p>
     <div class="sheet">
         @foreach ($checks as $check)
             <div class="tag">
                 <div class="name">{{ $check->item->name }}</div>
-                <div class="price">{{ number_format($check->item->price, 0, '.', ' ') }} <small>so‘m / {{ $check->item->unit }}</small></div>
+                <div class="price">{{ number_format($check->item->price, 0, '.', ' ') }} <small>{{ __('so‘m /') }} {{ $check->item->unit }}</small></div>
                 <div class="code">{{ $check->item->barcode ?: $check->item->code }}</div>
             </div>
         @endforeach

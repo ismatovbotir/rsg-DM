@@ -2,7 +2,7 @@
 <html lang="uz">
 <head>
     <meta charset="utf-8">
-    <title>Badge</title>
+    <title>{{ __('Badge') }}</title>
     <style>
         @page { size: A4; margin: 10mm; }
         * { box-sizing: border-box; }
@@ -21,7 +21,7 @@
     </style>
 </head>
 <body onload="window.print()">
-    <p class="noprint">{{ $cards->count() }} ta badge. Chop etish oynasi ochiladi; o‘lcham 85.6 × 54 mm (plastik karta).</p>
+    <p class="noprint">{{ $cards->count() }} {{ __('ta badge. Chop etish oynasi ochiladi; o‘lcham 85.6 × 54 mm (plastik karta).') }}</p>
     <div class="sheet">
         @foreach ($cards as $card)
             <div class="badge">
@@ -31,7 +31,7 @@
                         <div class="name">{{ $card['user']->name }}</div>
                         <div class="role">{{ $card['user']->role_label }}</div>
                     </div>
-                    <div class="hint">Kirish ekranida QR kodni skanerlang</div>
+                    <div class="hint">{{ __('Kirish ekranida QR kodni skanerlang') }}</div>
                 </div>
                 <div class="qr">{!! $card['qr'] !!}</div>
             </div>

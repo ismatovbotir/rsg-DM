@@ -4,17 +4,17 @@
     <div class="bar">
         
             <select wire:model.live="entity">
-                <option value="">Barcha turlar</option>
+                <option value="">{{ __('Barcha turlar') }}</option>
                 @foreach ($entities as $e)<option value="{{ $e }}">{{ $e }}</option>@endforeach
             </select>
-            <label class="flex items-center gap-1.5"><input type="checkbox" wire:model.live="errors"> Faqat xatolar</label>
+            <label class="flex items-center gap-1.5"><input type="checkbox" wire:model.live="errors"> {{ __('Faqat xatolar') }}</label>
         
         <span class="grow"></span>
-        <span class="sub">POST /api/v1/sync/{tur}, /api/shop|price|priceData|stock — har so‘rovda ko‘pi bilan 500 qator</span>
+        <span class="sub">{{ __('POST /api/v1/sync/{tur}, /api/shop|price|priceData|stock — har so‘rovda ko‘pi bilan 500 qator') }}</span>
     </div>
 
     <table>
-        <thead><tr><th>Vaqt</th><th>Tur</th><th class="num">Qator</th><th class="num">Yangi</th><th class="num">Yangilangan</th><th class="num">Xato</th><th>HTTP</th><th class="num">ms</th><th>IP</th></tr></thead>
+        <thead><tr><th>{{ __('Vaqt') }}</th><th>{{ __('Tur') }}</th><th class="num">{{ __('Qator') }}</th><th class="num">{{ __('Yangi') }}</th><th class="num">{{ __('Yangilangan') }}</th><th class="num">{{ __('Xato') }}</th><th>{{ __('HTTP') }}</th><th class="num">{{ __('ms') }}</th><th>{{ __('IP') }}</th></tr></thead>
         <tbody>
             @forelse ($logs as $log)
                 <tr>
@@ -32,7 +32,7 @@
                     <tr>
                         <td colspan="9">
                             <details>
-                                <summary>Xatolar ({{ $log->errors_count }}@if ($log->errors_count > 50), birinchi 50 tasi ko‘rsatilgan @endif)</summary>
+                                <summary>{{ __('Xatolar (') }}{{ $log->errors_count }}@if ($log->errors_count > 50){{ __(', birinchi 50 tasi ko‘rsatilgan') }} @endif)</summary>
                                 @foreach ($log->details ?? [] as $d)
                                     <div class="sub">@isset($d['index']) #{{ $d['index'] }}: @endisset{{ $d['message'] }}</div>
                                 @endforeach
@@ -41,7 +41,7 @@
                     </tr>
                 @endif
             @empty
-                <tr><td colspan="9">Adines hali ma’lumot yubormagan.</td></tr>
+                <tr><td colspan="9">{{ __('Adines hali ma’lumot yubormagan.') }}</td></tr>
             @endforelse
         </tbody>
     </table>

@@ -1,16 +1,16 @@
 <!doctype html>
-<html lang="uz">
+<html lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
-    <title>@yield('title', 'Boshqaruv') — {{ config('menu.app_name') }}</title>
+    <title>{!! \App\Support\Tr::t($__env->yieldContent('title', 'Boshqaruv')) !!} — {{ config('menu.app_name') }}</title>
     <link rel="stylesheet" href="{{ asset('css/admin.css') }}?v={{ @filemtime(public_path('css/admin.css')) }}">
     <link rel="stylesheet" href="{{ asset('css/checker.css') }}?v={{ @filemtime(public_path('css/checker.css')) }}">
 </head>
 <body>
     <aside>
-        <div class="brand flex items-center gap-2"><img src="{{ asset('img/logo.png') }}" alt="" class="h-8 w-8 rounded"><span>{{ config('menu.app_name') }}<small class="block text-[10px] font-normal opacity-70">Admin</small></span></div>
+        <div class="brand flex items-center gap-2"><img src="{{ asset('img/logo.png') }}" alt="" class="h-8 w-8 rounded"><span>{{ config('menu.app_name') }}<small class="block text-[10px] font-normal opacity-70">{{ __('Admin') }}</small></span></div>
         @php $me = auth()->user(); @endphp
         {{-- the groups and items come from App\Support\Permissions; a role only sees what it ticked --}}
         @foreach (\App\Support\Permissions::adminGroups() as $group)
@@ -30,16 +30,16 @@
             @endif
         @endforeach
         <div class="spacer"></div>
-        <form method="POST" action="{{ route('logout') }}">@csrf<button>Chiqish ({{ auth()->user()->name }})</button></form>
+        <form method="POST" action="{{ route('logout') }}">@csrf<button>{{ __('Chiqish (') }}{{ auth()->user()->name }})</button></form>
     </aside>
     <div class="main">
-        <header class="topbar"><h1>@yield('title')</h1></header>
+        <header class="topbar"><h1>{!! \App\Support\Tr::t($__env->yieldContent('title')) !!}</h1></header>
         <div class="scroll">
             @if (session('status'))<div class="flash">{{ session('status') }}</div>@endif
             @foreach ($errors->all() as $error)<div class="flash error">{{ $error }}</div>@endforeach
             @yield('content')
         </div>
-        <footer class="botbar"><span>{{ config('menu.app_name') }} · Admin</span><span>{{ auth()->user()->name }} · {{ now()->format('d.m.Y') }}</span></footer>
+        <footer class="botbar"><span>{{ config('menu.app_name') }} {{ __('· Admin') }}</span><span>{{ auth()->user()->name }} · {{ now()->format('d.m.Y') }}</span></footer>
     </div>
     <script>
         // Sidebar groups: collapsible, state kept per browser; the group holding the current page is always open.

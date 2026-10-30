@@ -76,17 +76,17 @@ class Document extends Model
     /** Field labels for validation messages. */
     public static function headerLabels(string $type): array
     {
-        return collect(self::headerFieldsFor($type))->map(fn ($f) => $f['label'])->all();
+        return collect(self::headerFieldsFor($type))->map(fn ($f) => __($f['label']))->all();
     }
 
     public static function validationMessages(): array
     {
         return [
-            'required' => ':attribute to‘ldirilishi shart.',
-            'exists' => ':attribute noto‘g‘ri tanlangan.',
-            'date' => ':attribute noto‘g‘ri sana.',
-            'different' => ':attribute va :other bir xil bo‘lmasligi kerak.',
-            'max' => ':attribute juda uzun.',
+            'required' => __(':attribute to‘ldirilishi shart.'),
+            'exists' => __(':attribute noto‘g‘ri tanlangan.'),
+            'date' => __(':attribute noto‘g‘ri sana.'),
+            'different' => __(':attribute va :other bir xil bo‘lmasligi kerak.'),
+            'max' => __(':attribute juda uzun.'),
         ];
     }
 
@@ -174,7 +174,7 @@ class Document extends Model
 
         return match (true) {
             $this->print_count === 0 => 'Chop etish shart emas',
-            $this->printed_at !== null => 'Chop etilgan '.$this->printed_at->format('d.m.Y H:i'),
+            $this->printed_at !== null => __('Chop etilgan').' '.$this->printed_at->format('d.m.Y H:i'),
             default => 'Chop etilmagan',
         };
     }
